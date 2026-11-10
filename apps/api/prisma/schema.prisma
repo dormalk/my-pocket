@@ -180,7 +180,7 @@ model ChildAccessLink {
 model PurseTask {
   id                 String         @id @default(uuid()) @db.Uuid
   childId            String         @db.Uuid
-  purseId            String         @db.Uuid
+  purseId            String?        @db.Uuid
   title              String
   frequency          TaskFrequency
   amountAgorot       Int
@@ -188,7 +188,7 @@ model PurseTask {
   active             Boolean        @default(true)
   createdAt          DateTime       @default(now())
   child              Child          @relation(fields: [childId], references: [id], onDelete: Cascade)
-  purse              Purse          @relation(fields: [purseId], references: [id], onDelete: Cascade)
+  purse              Purse?         @relation(fields: [purseId], references: [id], onDelete: Cascade)
   approvals          TaskApproval[]
   rewards            TaskReward[]
   @@index([childId, active])
