@@ -47,13 +47,24 @@ model Family {
 }
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  familyId     String   @db.Uuid
-  email        String   @unique
+  id           String    @id @default(uuid()) @db.Uuid
+  familyId     String    @db.Uuid
+  email        String    @unique
   passwordHash String
-  role         UserRole @default(PARENT)
-  createdAt    DateTime @default(now())
-  family       Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  role         UserRole  @default(PARENT)
+  createdAt    DateTime  @default(now())
+  family       Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
 }
 
 model Child {
@@ -62,18 +73,18 @@ model Child {
   name      String
   birthYear Int?
   createdAt DateTime @default(now())
-  family    Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
   purses    Purse[]
   goals     SavingsGoal[]
   requests  CashRequest[]
 }
 
 model Purse {
-  id        String    @id @default(uuid()) @db.Uuid
-  childId   String    @db.Uuid
+  id        String     @id @default(uuid()) @db.Uuid
+  childId   String     @db.Uuid
   type      PurseType
-  createdAt DateTime  @default(now())
-  child     Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  child     Child      @relation(fields: [childId], references: [id], onDelete: Cascade)
   entries   LedgerEntry[]
   @@unique([childId, type])
 }
@@ -112,26 +123,26 @@ model InterestPolicy {
 }
 
 model SavingsGoal {
-  id          String    @id @default(uuid()) @db.Uuid
-  childId     String    @db.Uuid
-  title       String
+  id           String    @id @default(uuid()) @db.Uuid
+  childId      String    @db.Uuid
+  title        String
   targetAgorot Int
-  active      Boolean   @default(true)
-  achievedAt  DateTime?
-  redeemedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  child       Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  active       Boolean   @default(true)
+  achievedAt   DateTime?
+  redeemedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  child        Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
   @@index([childId, active])
 }
 
 model CashRequest {
-  id          String        @id @default(uuid()) @db.Uuid
-  childId     String        @db.Uuid
+  id           String        @id @default(uuid()) @db.Uuid
+  childId      String        @db.Uuid
   amountAgorot Int
-  reason      String?
-  status      RequestStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  child       Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+  reason       String?
+  status       RequestStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  child        Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
   @@index([childId, status, createdAt])
 }
