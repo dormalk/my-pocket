@@ -315,20 +315,24 @@ app.post("/children/:childId/income",async(request,reply)=>{
    if(!expenses||!savings||!donation)throw Object.assign(new Error("purses_missing"),{code:"PURSES_MISSING"});
    let policy=await tx.childAllocationPolicy.findUnique({where:{childId:child.id}});
    const familyPolicy=await tx.allocationPolicy.findUnique({where:{familyId:user.familyId}});
-   const isValidSplit=(value:{expensesBps:number;savingsBps:number;donationBps:number}|null|undefined)=>{
+   type Split = {expensesBps:number;savingsBps:number;donationBps:number};
+   const isValidSplit=(value:Split|null|undefined):value is Split=>{
     if(!value)return false;
     const values=[value.expensesBps,value.savingsBps,value.donationBps];
     return values.every(v=>Number.isSafeInteger(v)&&v>=0&&v<=10000)&&values.reduce((sum,v)=>sum+v,0)===10000;
    };
    // Repair legacy/corrupt saved splits before allocating a deposit.
    if(!isValidSplit(policy)){
-    const fallback=isValidSplit(familyPolicy)?familyPolicy:{expensesBps:5000,savingsBps:3000,donationBps:2000};
+    const fallback:Split=isValidSplit(familyPolicy)?{
+     expensesBps:familyPolicy.expensesBps,savingsBps:familyPolicy.savingsBps,donationBps:familyPolicy.donationBps
+    }:{expensesBps:5000,savingsBps:3000,donationBps:2000};
     policy=await tx.childAllocationPolicy.upsert({
      where:{childId:child.id},
      create:{childId:child.id,expensesBps:fallback.expensesBps,savingsBps:fallback.savingsBps,donationBps:fallback.donationBps,effectiveAt:familyPolicy?.effectiveAt??new Date()},
      update:{expensesBps:fallback.expensesBps,savingsBps:fallback.savingsBps,donationBps:fallback.donationBps,effectiveAt:new Date()}
     });
    }
+   if(!policy)throw new Error("allocation_policy_missing");
    const savingsTotal=await tx.ledgerEntry.aggregate({where:{purseId:savings.id},_sum:{amountAgorot:true}});
    const savingsBalance=savingsTotal._sum.amountAgorot??0;
    const goal=await tx.savingsGoal.findFirst({where:{childId:child.id,active:true,redeemedAt:null},orderBy:{createdAt:"desc"}});
