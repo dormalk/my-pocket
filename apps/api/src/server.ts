@@ -120,7 +120,7 @@ app.get("/children",async(request,reply)=>{
   const purseIds=children.flatMap(child=>child.purses.map(purse=>purse.id));
   const totals=purseIds.length?await prisma.ledgerEntry.groupBy({by:["purseId"],where:{purseId:{in:purseIds}},_sum:{amountAgorot:true}}):[];
   const balances=new Map(totals.map(item=>[item.purseId,item._sum.amountAgorot??0]));
-  return {children:children.map(child=>({id:child.id,name:child.name,birthYear:child.birthYear,purses:child.purses.map(purse=>({id:purse.id,type:purse.type,balanceAgorot:balances.get(purse.id)??0}))}))};
+  return {children:children.map(child=>({id:child.id,name:child.name,birthYear:child.birthYear,avatar:child.avatar,purses:child.purses.map(purse=>({id:purse.id,type:purse.type,balanceAgorot:balances.get(purse.id)??0}))}))};
 });
 app.delete("/children/:childId",async(request,reply)=>{
   const user=await requireParent(request,reply);if(!user)return;
