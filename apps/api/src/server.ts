@@ -332,7 +332,7 @@ app.post("/children/:childId/income",async(request,reply)=>{
    const savingsTotal=await tx.ledgerEntry.aggregate({where:{purseId:savings.id},_sum:{amountAgorot:true}});
    const savingsBalance=savingsTotal._sum.amountAgorot??0;
    const goal=await tx.savingsGoal.findFirst({where:{childId:child.id,active:true,redeemedAt:null},orderBy:{createdAt:"desc"}});
-   const allocation=allocateIncome(parsed.data.amountAgorot,policy,savingsBalance,goal?.targetAgorot??null);
+   const allocation=allocateIncome(parsed.data.amountAgorot,{expensesBps:policy.expensesBps,savingsBps:policy.savingsBps,donationBps:policy.donationBps},savingsBalance,goal?.targetAgorot??null);
    const rows=[{purseId:expenses.id,amountAgorot:allocation.expenses,suffix:"expenses"},{purseId:savings.id,amountAgorot:allocation.savings,suffix:"savings"},{purseId:donation.id,amountAgorot:allocation.donation,suffix:"donation"}];
    await tx.ledgerEntry.createMany({data:rows.map(row=>({familyId:user.familyId,purseId:row.purseId,kind:"INCOME_ALLOCATION",amountAgorot:row.amountAgorot,idempotencyKey:parsed.data.idempotencyKey+":"+row.suffix,note:parsed.data.note??"הפקדת דמי כיס"}))});
    const achieved=goal&&savingsBalance+allocation.savings>=goal.targetAgorot;
