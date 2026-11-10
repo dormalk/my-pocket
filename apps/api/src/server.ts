@@ -266,18 +266,27 @@ app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
     if(currentCount>=task.weeklyRequiredCount)throw Object.assign(new Error("task_weekly_completed"),{code:"TASK_WEEKLY_COMPLETED"});
    }
    const approval=await tx.taskApproval.create({data:{taskId:task.id,completedOn:today,approvedById:user.id}});
-   if(task.frequency==="DAILY"){
-    await tx.ledgerEntry.create({data:{familyId:task.child.familyId,purseId:task.purseId,kind:"TASK_REWARD",amountAgorot:task.amountAgorot,idempotencyKey:"task:"+task.id+":"+today.toISOString().slice(0,10),note:"תגמול משימה: "+task.title}});
-    return {credited:true,amountAgorot:task.amountAgorot,approvedCountThisWeek:1,weeklyRequiredCount:1,frequency:task.frequency};
-   }
-   const approvedCountThisWeek=await tx.taskApproval.count({where:{taskId:task.id,completedOn:{gte:weekStart,lt:nextWeek}}});
-   let credited=false;
-   if(approvedCountThisWeek>=task.weeklyRequiredCount){
+   const approvedCountThisWeek=task.frequency==="DAILY"?1:await tx.taskApproval.count({where:{taskId:task.id,completedOn:{gte:weekStart,lt:nextWeek}}});
+   let credited=task.frequency==="DAILY";
+   let rewardKey="task:"+task.id+":"+today.toISOString().slice(0,10);
+   if(task.frequency==="WEEKLY"&&approvedCountThisWeek>=task.weeklyRequiredCount){
     const reward=await tx.taskReward.createMany({data:[{taskId:task.id,weekStart}],skipDuplicates:true});
-    if(reward.count===1){
-     await tx.ledgerEntry.create({data:{familyId:task.child.familyId,purseId:task.purseId,kind:"TASK_REWARD",amountAgorot:task.amountAgorot,idempotencyKey:"task-week:"+task.id+":"+weekStart.toISOString().slice(0,10),note:"תגמול שבועי על המשימה: "+task.title}});
-     credited=true;
-    }
+    if(reward.count===1){credited=true;rewardKey="task-week:"+task.id+":"+weekStart.toISOString().slice(0,10);}
+   }
+   if(credited){
+    const child=await tx.child.findUnique({where:{id:task.childId},include:{purses:true,allocation:true,goals:{where:{active:true,redeemedAt:null},orderBy:{createdAt:"desc"},take:1}}});
+    if(!child||!child.allocation)throw Object.assign(new Error("allocation_missing"),{code:"ALLOCATION_MISSING"});
+    const byType=new Map(child.purses.map(p=>[p.type,p]));
+    const expenses=byType.get("EXPENSES"),savings=byType.get("SAVINGS"),donation=byType.get("DONATION");
+    if(!expenses||!savings||!donation)throw Object.assign(new Error("purses_missing"),{code:"PURSES_MISSING"});
+    const savingsTotal=await tx.ledgerEntry.aggregate({where:{purseId:savings.id},_sum:{amountAgorot:true}});
+    const savingsBalance=savingsTotal._sum.amountAgorot??0;
+    const goal=child.goals[0];
+    const allocation=allocateIncome(task.amountAgorot,child.allocation,savingsBalance,goal?.targetAgorot??null);
+    const rows=[{purseId:expenses.id,amountAgorot:allocation.expenses,suffix:"expenses"},{purseId:savings.id,amountAgorot:allocation.savings,suffix:"savings"},{purseId:donation.id,amountAgorot:allocation.donation,suffix:"donation"}];
+    await tx.ledgerEntry.createMany({data:rows.map(row=>({familyId:task.child.familyId,purseId:row.purseId,kind:"TASK_REWARD",amountAgorot:row.amountAgorot,idempotencyKey:rewardKey+":"+row.suffix,note:"תגמול משימה: "+task.title}))});
+    const achieved=goal&&savingsBalance+allocation.savings>=goal.targetAgorot;
+    if(achieved&&!goal.achievedAt)await tx.savingsGoal.update({where:{id:goal.id},data:{achievedAt:new Date()}});
    }
    return {credited,amountAgorot:credited?task.amountAgorot:0,approvedCountThisWeek,weeklyRequiredCount:task.weeklyRequiredCount,frequency:task.frequency};
   });
@@ -287,6 +296,7 @@ app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
   if(code==="P2002")return reply.code(409).send({error:"task_already_approved_today"});
   if(code==="TASK_WEEKLY_COMPLETED")return reply.code(409).send({error:"task_weekly_completed"});
   if(code==="TASK_NOT_FOUND")return reply.code(404).send({error:"task_not_found"});
+  if(code==="ALLOCATION_MISSING"||code==="PURSES_MISSING")return reply.code(409).send({error:"family_setup_incomplete"});
   throw error;
  }
 });
