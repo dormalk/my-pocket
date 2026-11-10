@@ -334,14 +334,6 @@ app.put("/children/:childId/savings-goal",async(request,reply)=>{
  return reply.code(existing?200:201).send({goal,balanceAgorot,withdrawalsUnlocked:Boolean(achievedAt)});
 });
 
-app.delete("/children/:childId/savings-goal",async(request,reply)=>{
- const user=await requireParent(request,reply);if(!user)return;
- const params=z.object({childId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_child"});
- const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},select:{id:true}});if(!child)return reply.code(404).send({error:"child_not_found"});
- await prisma.savingsGoal.updateMany({where:{childId:child.id,active:true,redeemedAt:null},data:{active:false}});
- return {ok:true};
-});
-
 app.post("/children/:childId/savings/withdraw",async(request,reply)=>{
  const user=await requireParent(request,reply);if(!user)return;
  const params=z.object({childId:z.string().uuid()}).safeParse(request.params);const parsed=savingsWithdrawSchema.safeParse(request.body);
