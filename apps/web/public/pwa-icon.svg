@@ -1,11 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1b5548"/><stop offset="1" stop-color="#102f2c"/></linearGradient><linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b8e6a0"/><stop offset="1" stop-color="#68bd83"/></linearGradient></defs>
-<rect width="512" height="512" rx="116" fill="url(#bg)"/>
-<circle cx="256" cy="256" r="174" fill="#fff" opacity=".06"/>
-<path d="M256 374V227" fill="none" stroke="#e8f3df" stroke-width="19" stroke-linecap="round"/>
-<path d="M252 280c-92 2-137-46-130-121 77-7 126 31 130 121Z" fill="url(#leaf)"/>
-<path d="M260 236c-3-92 49-143 128-132 3 79-39 126-128 132Z" fill="#9ad995"/>
-<path d="M255 374c-5-57-39-94-92-113M260 236c18-40 54-75 101-96" fill="none" stroke="#e8f3df" stroke-width="10" stroke-linecap="round" opacity=".8"/>
-<path d="M180 407h152" stroke="#e8f3df" stroke-width="15" stroke-linecap="round" opacity=".85"/>
-<circle cx="382" cy="365" r="13" fill="#e5c878"/><circle cx="139" cy="333" r="9" fill="#e5c878"/>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#174b3d"/><stop offset="1" stop-color="#0d2d29"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#ffe69a"/><stop offset="1" stop-color="#d99a32"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<circle cx="256" cy="256" r="190" fill="#fff" opacity=".045"/>
+<path d="M116 213h280l-22 174a28 28 0 0 1-28 24H166a28 28 0 0 1-28-24z" fill="url(#gold)" stroke="#fff0bd" stroke-width="12" stroke-linejoin="round"/>
+<path d="M105 190a30 30 0 0 1 30-30h242a30 30 0 0 1 30 30v43H105z" fill="#f5c65e" stroke="#fff0bd" stroke-width="12"/>
+<path d="M213 160v-27a43 43 0 0 1 86 0v27" fill="none" stroke="#fff0bd" stroke-width="16" stroke-linecap="round"/>
+<rect x="222" y="270" width="68" height="70" rx="17" fill="#174b3d"/>
+<circle cx="256" cy="294" r="9" fill="#ffe69a"/>
+<path d="M256 303v19" stroke="#ffe69a" stroke-width="9" stroke-linecap="round"/>
+<path d="M160 390h192" stroke="#fff0bd" stroke-width="12" stroke-linecap="round" opacity=".8"/>
+<circle cx="368" cy="119" r="28" fill="#f5c65e"/><path d="M368 102v34m-12-25h19a9 9 0 0 1 0 18h-14" fill="none" stroke="#174b3d" stroke-width="7" stroke-linecap="round"/>
 </svg>

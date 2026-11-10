@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Growise — Growing Smart Money Habits",
-  "short_name": "Growise",
-  "description": "מפתחים הרגלים פיננסיים חכמים וצומחים יחד.",
+  "name": "קופת האוצר",
+  "short_name": "קופת האוצר",
+  "description": "מנהלים כסף, חוסכים ומגשימים מטרות יחד.",
   "lang": "he",
   "dir": "rtl",
   "start_url": "/",
