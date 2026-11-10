@@ -42,7 +42,7 @@ async function currentUser(request:FastifyRequest){
   if(!token) return null;
   const session=await prisma.session.findUnique({
     where:{tokenHash:tokenHash(token)},
-    include:{user:{select:{id:true,email:true,role:true,familyId:true,family:{select:{name:true}}}}}
+    include:{user:{select:{id:true,email:true,name:true,role:true,familyId:true,family:{select:{name:true}}}}}
   });
   if(!session) return null;
   if(session.expiresAt.getTime()<=Date.now()){
@@ -71,7 +71,7 @@ app.post("/auth/register",{config:{rateLimit:{max:5,timeWindow:"15 minutes"}}},a
           interest:{create:{annualBps:0}}
         }
       });
-      return tx.user.create({data:{familyId:family.id,email:data.email,passwordHash,role:UserRole.PARENT},select:{id:true,email:true,role:true,familyId:true}});
+      return tx.user.create({data:{familyId:family.id,email:data.email,name:data.parentName,passwordHash,role:UserRole.PARENT},select:{id:true,email:true,name:true,role:true,familyId:true}});
     });
     await issueSession(user.id,reply);
     return reply.code(201).send({user});
@@ -89,7 +89,7 @@ app.post("/auth/login",{config:{rateLimit:{max:5,timeWindow:"15 minutes"}}},asyn
   if(!user||!(await argon2.verify(user.passwordHash,parsed.data.password)))
     return reply.code(401).send({error:"invalid_email_or_password"});
   await issueSession(user.id,reply);
-  return {user:{id:user.id,email:user.email,role:user.role,familyId:user.familyId}};
+  return {user:{id:user.id,email:user.email,name:user.name,role:user.role,familyId:user.familyId}};
 });
 
 app.get("/auth/me",async(request,reply)=>{
