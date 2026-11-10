@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "הקופה שלי",
+  "short_name": "הקופה שלי",
+  "description": "לומדים לנהל דמי כיס בדרך כיפית",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff8ed",
+  "theme_color": "#fff8ed",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
