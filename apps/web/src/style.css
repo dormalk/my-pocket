@@ -18,3 +18,5 @@
 .share-link-panel small{font-size:12px;color:#788498;margin-top:4px;line-height:1.5}
 .share-link-panel>div:nth-child(2){display:flex;gap:8px;flex-wrap:wrap}
 .last-updated{display:block;text-align:center;color:#8993a4;font-size:11px;margin-top:14px}
+
+.share-url-input{width:100%;min-width:0;border:1px solid #dceefa;border-radius:10px;background:white;padding:11px;color:#39445a;font:12px Arial,sans-serif;text-align:left}
