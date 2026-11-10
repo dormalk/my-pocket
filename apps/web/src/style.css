@@ -12,3 +12,9 @@
 .pwa-help{position:absolute;z-index:20;top:calc(100% + 8px);right:0;width:min(290px,calc(100vw - 32px));display:grid;gap:8px;padding:13px;background:white;border:1px solid #eee3d2;border-radius:13px;box-shadow:0 10px 30px #26304720;color:#273249;font-size:12px;line-height:1.55}
 .pwa-help span{color:#687386}
 @media(max-width:680px){.pwa-install-button{font-size:11px;padding:8px 9px}.top-actions{align-items:flex-end}}
+
+.share-link-panel{display:grid;gap:10px;background:#f0f8ff;border:1px solid #dceefa;border-radius:16px;padding:15px;margin:14px 0}
+.share-link-panel b,.share-link-panel small{display:block}
+.share-link-panel small{font-size:12px;color:#788498;margin-top:4px;line-height:1.5}
+.share-link-panel>div:nth-child(2){display:flex;gap:8px;flex-wrap:wrap}
+.last-updated{display:block;text-align:center;color:#8993a4;font-size:11px;margin-top:14px}
