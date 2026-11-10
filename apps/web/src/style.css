@@ -39,3 +39,9 @@
 .task-progress .section-title{margin-top:0}
 @media(max-width:850px){.task-create-form{grid-template-columns:repeat(2,minmax(0,1fr))}.task-create-form .primary-button{grid-column:1/-1}}
 @media(max-width:560px){.task-create-form{grid-template-columns:1fr}.task-create-form .primary-button{grid-column:auto}.task-item{align-items:flex-start;flex-direction:column}.task-actions{width:100%}.task-actions button{flex:1}}
+
+/* Unified treasure-chest identity across header and loading screens */
+.brand-logo{display:block;width:48px;height:48px;object-fit:cover;border-radius:14px;box-shadow:0 3px 10px #123b3522}
+.loading-brand{display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0 4px}
+.loading-brand img{width:104px;height:104px;object-fit:cover;border-radius:25px;box-shadow:0 8px 24px #123b3528}
+.loading-brand h1{margin:0}
