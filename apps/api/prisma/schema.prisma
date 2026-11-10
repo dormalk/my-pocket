@@ -73,6 +73,8 @@ model Child {
   familyId  String   @db.Uuid
   name      String
   birthYear Int?
+  avatar    String   @default("🧒")
+  archivedAt DateTime?
   createdAt DateTime @default(now())
   family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
   purses    Purse[]
