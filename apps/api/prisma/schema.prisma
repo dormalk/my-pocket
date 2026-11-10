@@ -78,6 +78,7 @@ model Child {
   createdAt DateTime @default(now())
   family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
   purses    Purse[]
+  allocation ChildAllocationPolicy?
   goals     SavingsGoal[]
   requests  CashRequest[]
   @@index([familyId, archivedAt])
