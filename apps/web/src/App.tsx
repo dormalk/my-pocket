@@ -6,7 +6,9 @@ type Child={id:string;name:string;birthYear:number|null;avatar:string;purses:Pur
 type PurseTask={id:string;title:string;frequency:"DAILY"|"WEEKLY";amountAgorot:number;weeklyRequiredCount:number;approvedCountThisWeek:number;approvedToday:boolean;weekStart?:string};
 type User={id:string;email:string;name:string;role:"PARENT"|"CHILD";familyId:string};
 type AuthMode="login"|"register";
-type AllocationPolicy={expensesBps:number;savingsBps:number;donationBps:number;effectiveAt:string};\ntype SavingsGoal={id:string;title:string;targetAgorot:number;active:boolean;achievedAt:string|null;redeemedAt:string|null};\ntype SavingsGoalState={goal:SavingsGoal|null;balanceAgorot:number;withdrawalsUnlocked:boolean};
+type AllocationPolicy={expensesBps:number;savingsBps:number;donationBps:number;effectiveAt:string};
+type SavingsGoal={id:string;title:string;targetAgorot:number;active:boolean;achievedAt:string|null;redeemedAt:string|null};
+type SavingsGoalState={goal:SavingsGoal|null;balanceAgorot:number;withdrawalsUnlocked:boolean};
 type SharedChild=Pick<Child,"id"|"name"|"avatar"|"purses">&{tasks:PurseTask[]};
 type BeforeInstallPromptEvent=Event&{prompt:()=>Promise<void>;userChoice:Promise<{outcome:"accepted"|"dismissed";platform:string}>};
 const meta:Record<PurseType,{label:string;icon:string;description:string;className:string}>={EXPENSES:{label:"הוצאות",icon:"🛍️",description:"לדברים שכיף לקנות",className:"expenses"},SAVINGS:{label:"חיסכון",icon:"🚀",description:"מגשימים חלום גדול",className:"savings"},DONATION:{label:"תרומה",icon:"💛",description:"עושים טוב בעולם",className:"donation"}};
@@ -20,7 +22,12 @@ export default function App(){
  const [familyName,setFamilyName]=useState(""),[parentName,setParentName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState("");
  const [children,setChildren]=useState<Child[]>([]),[selectedId,setSelectedId]=useState(""),[childName,setChildName]=useState(""),[birthYear,setBirthYear]=useState(""),[childAvatar,setChildAvatar]=useState("🧒"),[deleteConfirm,setDeleteConfirm]=useState(false);
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
- const [allocation,setAllocation]=useState({expensesBps:5000,savingsBps:3000,donationBps:2000});\n const [savingsGoal,setSavingsGoal]=useState<SavingsGoalState>({goal:null,balanceAgorot:0,withdrawalsUnlocked:false});\n const [goalTitle,setGoalTitle]=useState("");\n const [goalTarget,setGoalTarget]=useState("");\n const [withdrawAmount,setWithdrawAmount]=useState("");\n const [withdrawNote,setWithdrawNote]=useState("משיכה מקופת חיסכון");
+ const [allocation,setAllocation]=useState({expensesBps:5000,savingsBps:3000,donationBps:2000});
+ const [savingsGoal,setSavingsGoal]=useState<SavingsGoalState>({goal:null,balanceAgorot:0,withdrawalsUnlocked:false});
+ const [goalTitle,setGoalTitle]=useState("");
+ const [goalTarget,setGoalTarget]=useState("");
+ const [withdrawAmount,setWithdrawAmount]=useState("");
+ const [withdrawNote,setWithdrawNote]=useState("משיכה מקופת חיסכון");
  const [depositAmount,setDepositAmount]=useState(""),[depositNote,setDepositNote]=useState("דמי כיס");
  const [tasks,setTasks]=useState<PurseTask[]>([]),[taskTitle,setTaskTitle]=useState(""),[taskFrequency,setTaskFrequency]=useState<"DAILY"|"WEEKLY">("DAILY"),[taskAmount,setTaskAmount]=useState(""),[taskWeeklyCount,setTaskWeeklyCount]=useState("3");
  const loadChildren=useCallback(async()=>{const result=await api<{children:Child[]}>("/children");setChildren(result.children);setSelectedId(current=>result.children.some(c=>c.id===current)?current:result.children[0]?.id??"");},[]);
