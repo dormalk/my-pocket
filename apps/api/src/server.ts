@@ -182,10 +182,10 @@ app.post("/children",async(request,reply)=>{
 const allocationSchema=z.object({expensesBps:z.number().int().min(0).max(10000),savingsBps:z.number().int().min(0).max(10000),donationBps:z.number().int().min(0).max(10000)}).superRefine((value,ctx)=>{if(value.expensesBps+value.savingsBps+value.donationBps!==10000)ctx.addIssue({code:"custom",message:"אחוזי החלוקה חייבים להסתכם ב-100%"});});
 
 function localDateRange(timezone:string){
- const parts=new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
- const [year,month,day]=parts.split("-").map(Number);
- const today=new Date(Date.UTC(year,month-1,day));
- const weekday=(today.getUTCDay()+6)%7;
+ const parts=new Intl.DateTimeFormat("en-US",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+ const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+ const today=new Date(Date.UTC(Number(values.year),Number(values.month)-1,Number(values.day)));
+ const weekday=today.getUTCDay();
  const weekStart=new Date(today);weekStart.setUTCDate(today.getUTCDate()-weekday);
  const nextWeek=new Date(weekStart);nextWeek.setUTCDate(weekStart.getUTCDate()+7);
  return {today,weekStart,nextWeek};
@@ -263,6 +263,10 @@ app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
    const task=await tx.purseTask.findFirst({where:{id:params.data.taskId,childId:params.data.childId,active:true,child:{familyId:user.familyId,archivedAt:null}},include:{child:{select:{familyId:true,family:{select:{timezone:true}}}}}});
    if(!task)throw Object.assign(new Error("task_not_found"),{code:"TASK_NOT_FOUND"});
    const {today,weekStart,nextWeek}=localDateRange(task.child.family.timezone);
+   if(task.frequency==="WEEKLY"){
+    const currentCount=await tx.taskApproval.count({where:{taskId:task.id,completedOn:{gte:weekStart,lt:nextWeek}}});
+    if(currentCount>=task.weeklyRequiredCount)throw Object.assign(new Error("task_weekly_completed"),{code:"TASK_WEEKLY_COMPLETED"});
+   }
    const approval=await tx.taskApproval.create({data:{taskId:task.id,completedOn:today,approvedById:user.id}});
    if(task.frequency==="DAILY"){
     await tx.ledgerEntry.create({data:{familyId:task.child.familyId,purseId:task.purseId,kind:"TASK_REWARD",amountAgorot:task.amountAgorot,idempotencyKey:"task:"+task.id+":"+today.toISOString().slice(0,10),note:"תגמול משימה: "+task.title}});
@@ -271,9 +275,11 @@ app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
    const approvedCountThisWeek=await tx.taskApproval.count({where:{taskId:task.id,completedOn:{gte:weekStart,lt:nextWeek}}});
    let credited=false;
    if(approvedCountThisWeek>=task.weeklyRequiredCount){
-    await tx.taskReward.create({data:{taskId:task.id,weekStart}});
-    await tx.ledgerEntry.create({data:{familyId:task.child.familyId,purseId:task.purseId,kind:"TASK_REWARD",amountAgorot:task.amountAgorot,idempotencyKey:"task-week:"+task.id+":"+weekStart.toISOString().slice(0,10),note:"תגמול שבועי על המשימה: "+task.title}});
-    credited=true;
+    const reward=await tx.taskReward.createMany({data:[{taskId:task.id,weekStart}],skipDuplicates:true});
+    if(reward.count===1){
+     await tx.ledgerEntry.create({data:{familyId:task.child.familyId,purseId:task.purseId,kind:"TASK_REWARD",amountAgorot:task.amountAgorot,idempotencyKey:"task-week:"+task.id+":"+weekStart.toISOString().slice(0,10),note:"תגמול שבועי על המשימה: "+task.title}});
+     credited=true;
+    }
    }
    return {credited,amountAgorot:credited?task.amountAgorot:0,approvedCountThisWeek,weeklyRequiredCount:task.weeklyRequiredCount,frequency:task.frequency};
   });
@@ -281,6 +287,7 @@ app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
  }catch(error){
   const code=typeof error==="object"&&error!==null&&"code" in error?(error as {code?:string}).code:undefined;
   if(code==="P2002")return reply.code(409).send({error:"task_already_approved_today"});
+  if(code==="TASK_WEEKLY_COMPLETED")return reply.code(409).send({error:"task_weekly_completed"});
   if(code==="TASK_NOT_FOUND")return reply.code(404).send({error:"task_not_found"});
   throw error;
  }
