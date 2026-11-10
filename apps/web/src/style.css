@@ -45,3 +45,16 @@
 .loading-brand{display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0 4px}
 .loading-brand img{width:104px;height:104px;object-fit:cover;border-radius:25px;box-shadow:0 8px 24px #123b3528}
 .loading-brand h1{margin:0}
+
+.savings-goal-panel{background:#fffaf0;border:1px solid #f1e6d2;border-radius:16px;padding:16px;margin:14px 0;display:grid;gap:12px}
+.goal-form,.withdraw-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+.goal-form label,.withdraw-form label{display:grid;gap:6px;color:#687386;font-size:13px}
+.goal-form input,.withdraw-form input{width:100%;min-width:0;border:1px solid #e4e7ee;border-radius:10px;padding:10px;background:white}
+.goal-progress{display:grid;gap:8px;background:white;border:1px solid #eee8dc;border-radius:13px;padding:13px}
+.goal-progress>div:first-child{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.goal-progress span,.goal-progress small{color:#788498;font-size:12px}
+.goal-track{height:10px;background:#f0eadf;border-radius:10px;overflow:hidden}
+.goal-track span{display:block;height:100%;background:#45a477;border-radius:10px;transition:width .2s}
+.withdraw-form{border-top:1px solid #eee8dc;padding-top:12px}
+.withdraw-form>b{grid-column:1/-1}
+@media(max-width:680px){.goal-form,.withdraw-form{grid-template-columns:1fr}.savings-goal-panel{padding:13px}}
