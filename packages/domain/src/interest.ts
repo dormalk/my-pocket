@@ -7,7 +7,7 @@ export function calculateMonthlyInterest(balances:readonly DailyBalance[],annual
  let accrued=0;
  for(const day of balances){
   if(!Number.isSafeInteger(day.closingBalanceAgorot)||day.closingBalanceAgorot<0) throw new Error("יתרה יומית לא תקינה");
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(day.date)) throw new Error("תאריך לא תקין");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(day.date)) throw new Error("תאריך לא תקין");
   const parsed=new Date(day.date+"T00:00:00.000Z");
   if(Number.isNaN(parsed.getTime())||parsed.toISOString().slice(0,10)!==day.date) throw new Error("תאריך לא תקין");
   accrued+=day.closingBalanceAgorot*annualRateBps/10000/daysInYear(parsed.getUTCFullYear());
