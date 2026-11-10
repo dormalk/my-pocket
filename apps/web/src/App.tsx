@@ -1,0 +1,18 @@
+import {useMemo,useState} from "react";
+import {allocateIncome,formatIls} from "@mypocket/domain";
+type Purse="expenses"|"savings"|"donation";
+const labels:Record<Purse,string>={expenses:"הוצאות",savings:"חיסכון",donation:"תרומה"};
+const icons:Record<Purse,string>={expenses:"🛍️",savings:"🚀",donation:"💛"};
+export default function App(){
+ const [balances,setBalances]=useState({expenses:12500,savings:8300,donation:2400});
+ const [income,setIncome]=useState("50");const [goal,setGoal]=useState(150);const [mode,setMode]=useState<"child"|"parent">("child");
+ const total=useMemo(()=>Object.values(balances).reduce((a,b)=>a+b,0),[balances]);
+ function addIncome(){const amount=Math.round(Number(income)*100);if(!Number.isSafeInteger(amount)||amount<=0)return;const a=allocateIncome(amount,{expensesBps:5000,savingsBps:3000,donationBps:2000},balances.savings,goal*100);setBalances(b=>({expenses:b.expenses+a.expenses,savings:b.savings+a.savings,donation:b.donation+a.donation}));}
+ return <main className="shell"><header className="topbar"><div className="brand"><span className="brand-icon">🐷</span><div><b>הקופה שלי</b><small>הכסף שלי, הבחירות שלי</small></div></div><nav><button className={mode==="child"?"selected":""} onClick={()=>setMode("child")}>עולם הילדים</button><button className={mode==="parent"?"selected":""} onClick={()=>setMode("parent")}>אזור ההורים</button></nav></header>
+ {mode==="child"? <><section className="welcome"><div><small className="eyebrow">איזה כיף שחזרת!</small><h1>היי, אלוף הכסף! 🌟</h1><p>כל שקל קטן מקרב אותך לחלומות הגדולים שלך.</p></div><div className="mascot">🦊</div></section>
+ <section className="total"><div><span>כל הכסף שלך</span><strong>{formatIls(total)}</strong><small>מחולק בין שלוש קופות חכמות</small></div><div className="coin">🪙</div></section>
+ <div className="section-title"><div><h2>הקופות שלי</h2><p>לכל קופה יש משימה מיוחדת</p></div><span>✦</span></div>
+ <section className="purses">{(["expenses","savings","donation"] as Purse[]).map(p=><article className={"purse "+p} key={p}><div className="purse-head"><span>{icons[p]}</span><small>•••</small></div><h3>קופת {labels[p]}</h3><strong>{formatIls(balances[p])}</strong><p>{p==="expenses"?"לדברים שכיף לקנות":p==="savings"?"מגשימים חלום גדול":"עושים טוב בעולם"}</p>{p==="savings"&&<div className="progress"><i style={{width:Math.min(100,balances.savings/(goal*100)*100)+"%"}}/></div>}</article>)}</section>
+ <section className="lower"><article className="add-card"><div className="emoji">🎁</div><div><h3>קיבלת כסף?</h3><p>נוסיף אותו ונחלק בין הקופות שלך.</p><div className="add-row"><label>סכום בשקלים<input value={income} inputMode="decimal" onChange={e=>setIncome(e.target.value)}/></label><button onClick={addIncome}>הוסף כסף ＋</button></div></div></article><article className="tip"><span>💡</span><div><b>טיפ של אלופים</b><p>כשחוסכים קצת בכל פעם, החלום מתקרב בצעדים קטנים!</p></div></article></section></>:<section className="parent"><small className="eyebrow">אזור ההורים</small><h1>ניהול הקופה המשפחתית ⚙️</h1><p>הגדרות לדוגמה — עדיין לא נשמרות בשרת.</p><div className="parent-grid"><article><b>חלוקת הכנסות</b><strong>50% הוצאות · 30% חיסכון · 20% תרומה</strong><small>החלוקה חלה על הכנסות עתידיות בלבד</small></article><article><b>יעד החיסכון</b><strong>{formatIls(goal*100)}</strong><label>יעד חדש (₪)<input type="number" min="1" value={goal} onChange={e=>setGoal(Math.max(1,Number(e.target.value)))}/></label></article><article><b>ריבית בקופת הוצאות</b><strong>3.5% לשנה</strong><small>תצוגה לדוגמה</small></article></div></section>}
+ <footer>💛 הקופה שלי · לומדים לנהל כסף בדרך כיפית</footer></main>;
+}

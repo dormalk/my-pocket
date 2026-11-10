@@ -1,0 +1,5 @@
+import { assertAgorot, type Agorot } from "./money.js";
+export type Percentages = { expensesBps:number; savingsBps:number; donationBps:number };
+export type Allocation = { expenses:Agorot; savings:Agorot; donation:Agorot };
+export function validatePercentages(p:Percentages):void { for (const v of Object.values(p)) if (!Number.isInteger(v)||v<0||v>10000) throw new Error("אחוזי החלוקה אינם תקינים"); if(p.expensesBps+p.savingsBps+p.donationBps!==10000) throw new Error("אחוזי החלוקה חייבים להסתכם ב-100%"); }
+export function allocateIncome(amount:Agorot,p:Percentages,savingsBalance:Agorot,savingsTarget:Agorot|null):Allocation { assertAgorot(amount); assertAgorot(savingsBalance); if(savingsTarget!==null) assertAgorot(savingsTarget); validatePercentages(p); const rawSavings=Math.floor(amount*p.savingsBps/10000); const donation=Math.floor(amount*p.donationBps/10000); const room=savingsTarget===null?amount:Math.max(0,savingsTarget-savingsBalance); const savings=Math.min(rawSavings,room); return {expenses:amount-savings-donation,savings,donation}; }
