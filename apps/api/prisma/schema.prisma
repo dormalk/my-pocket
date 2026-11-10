@@ -79,6 +79,7 @@ model Child {
   family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
   purses    Purse[]
   allocation ChildAllocationPolicy?
+  accessLink ChildAccessLink?
   goals     SavingsGoal[]
   requests  CashRequest[]
   @@index([familyId, archivedAt])
@@ -160,4 +161,14 @@ model ChildAllocationPolicy {
   donationBps Int
   effectiveAt DateTime @default(now())
   child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+}
+
+model ChildAccessLink {
+  id        String    @id @default(uuid()) @db.Uuid
+  childId   String    @unique @db.Uuid
+  tokenHash String    @unique
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+  child     Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  @@index([tokenHash, revokedAt])
 }
