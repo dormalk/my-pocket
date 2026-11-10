@@ -126,8 +126,8 @@ app.get("/public/child/:token",async(request,reply)=>{
   const totals=purseIds.length?await prisma.ledgerEntry.groupBy({by:["purseId"],where:{purseId:{in:purseIds}},_sum:{amountAgorot:true}}):[];
   const balances=new Map(totals.map(item=>[item.purseId,item._sum.amountAgorot??0]));
   const {today,weekStart,nextWeek}=localDateRange(link.child.family.timezone);
-  const tasks=await prisma.purseTask.findMany({where:{childId:link.child.id,active:true},include:{purse:{select:{type:true}},approvals:{where:{completedOn:{gte:weekStart,lt:nextWeek}},select:{completedOn:true}}}});
-  return {child:{id:link.child.id,name:link.child.name,avatar:link.child.avatar,purses:link.child.purses.map(p=>({id:p.id,type:p.type,balanceAgorot:balances.get(p.id)??0})),tasks:tasks.map(task=>({id:task.id,purseId:task.purseId,purseType:task.purse.type,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))}};
+  const tasks=await prisma.purseTask.findMany({where:{childId:link.child.id,active:true},include:{approvals:{where:{completedOn:{gte:weekStart,lt:nextWeek}},select:{completedOn:true}}}});
+  return {child:{id:link.child.id,name:link.child.name,avatar:link.child.avatar,purses:link.child.purses.map(p=>({id:p.id,type:p.type,balanceAgorot:balances.get(p.id)??0})),tasks:tasks.map(task=>({id:task.id,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))}};
 });
 
 app.get("/children",async(request,reply)=>{
@@ -191,7 +191,6 @@ function localDateRange(timezone:string){
  return {today,weekStart,nextWeek};
 }
 const taskSchema=z.object({
- purseId:z.string().uuid(),
  title:z.string().trim().min(1).max(80),
  frequency:z.enum(["DAILY","WEEKLY"]),
  amountAgorot:z.number().int().positive().max(2147483647),
@@ -234,8 +233,8 @@ app.get("/children/:childId/tasks",async(request,reply)=>{
  const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},select:{id:true,family:{select:{timezone:true}}}});
  if(!child)return reply.code(404).send({error:"child_not_found"});
  const {today,weekStart,nextWeek}=localDateRange(child.family.timezone);
- const tasks=await prisma.purseTask.findMany({where:{childId:child.id,active:true},orderBy:{createdAt:"asc"},include:{purse:{select:{type:true}},approvals:{where:{completedOn:{gte:weekStart,lt:nextWeek}},select:{completedOn:true}}}});
- return {tasks:tasks.map(task=>({id:task.id,purseId:task.purseId,purseType:task.purse.type,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))};
+ const tasks=await prisma.purseTask.findMany({where:{childId:child.id,active:true},orderBy:{createdAt:"asc"},include:{approvals:{where:{completedOn:{gte:weekStart,lt:nextWeek}},select:{completedOn:true}}}});
+ return {tasks:tasks.map(task=>({id:task.id,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))};
 });
 app.post("/children/:childId/tasks",async(request,reply)=>{
  const user=await requireParent(request,reply);if(!user)return;
@@ -243,10 +242,8 @@ app.post("/children/:childId/tasks",async(request,reply)=>{
  if(!params.success||!parsed.success)return reply.code(400).send({error:"invalid_task",details:parsed.success?undefined:parsed.error.flatten().fieldErrors});
  const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},select:{id:true}});
  if(!child)return reply.code(404).send({error:"child_not_found"});
- const purse=await prisma.purse.findFirst({where:{id:parsed.data.purseId,childId:child.id},select:{id:true}});
- if(!purse)return reply.code(400).send({error:"invalid_task_purse"});
- const task=await prisma.purseTask.create({data:{childId:child.id,purseId:purse.id,title:parsed.data.title,frequency:parsed.data.frequency,amountAgorot:parsed.data.amountAgorot,weeklyRequiredCount:parsed.data.frequency==="DAILY"?1:parsed.data.weeklyRequiredCount},include:{purse:{select:{type:true}}}});
- return reply.code(201).send({task:{id:task.id,purseId:task.purseId,purseType:task.purse.type,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:0,approvedToday:false}});
+ const task=await prisma.purseTask.create({data:{childId:child.id,title:parsed.data.title,frequency:parsed.data.frequency,amountAgorot:parsed.data.amountAgorot,weeklyRequiredCount:parsed.data.frequency==="DAILY"?1:parsed.data.weeklyRequiredCount}});
+ return reply.code(201).send({task:{id:task.id,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:0,approvedToday:false}});
 });
 app.delete("/children/:childId/tasks/:taskId",async(request,reply)=>{
  const user=await requireParent(request,reply);if(!user)return;
