@@ -1,0 +1,1 @@
+ALTER TYPE "LedgerKind" ADD VALUE 'TASK_REWARD';
