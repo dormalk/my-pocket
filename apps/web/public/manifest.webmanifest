@@ -12,6 +12,11 @@
   "background_color": "#f5f8f4",
   "theme_color": "#123b35",
   "icons": [
-    {"src": "/pwa-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+    {
+      "src": "/pwa-icon.svg?v=4",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
   ]
 }
