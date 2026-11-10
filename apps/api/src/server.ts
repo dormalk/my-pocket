@@ -301,6 +301,78 @@ app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
  }
 });
 
+const savingsGoalSchema=z.object({title:z.string().trim().min(1).max(80),targetAgorot:z.number().int().positive().max(2147483647)});
+const savingsWithdrawSchema=z.object({amountAgorot:z.number().int().positive().max(2147483647),idempotencyKey:z.string().min(8).max(100),note:z.string().trim().max(160).optional()});
+
+app.get("/children/:childId/savings-goal",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_child"});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},include:{purses:{where:{type:"SAVINGS"},select:{id:true}}}});
+ if(!child)return reply.code(404).send({error:"child_not_found"});
+ const purse=child.purses[0];if(!purse)return reply.code(409).send({error:"family_setup_incomplete"});
+ const total=await prisma.ledgerEntry.aggregate({where:{purseId:purse.id},_sum:{amountAgorot:true}});
+ const balanceAgorot=total._sum.amountAgorot??0;
+ let goal=await prisma.savingsGoal.findFirst({where:{childId:child.id,active:true,redeemedAt:null},orderBy:{createdAt:"desc"}});
+ if(goal&&balanceAgorot>=goal.targetAgorot&&!goal.achievedAt)goal=await prisma.savingsGoal.update({where:{id:goal.id},data:{achievedAt:new Date()}});
+ return {goal,balanceAgorot,withdrawalsUnlocked:!goal||Boolean(goal.achievedAt)};
+});
+
+app.put("/children/:childId/savings-goal",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);const parsed=savingsGoalSchema.safeParse(request.body);
+ if(!params.success||!parsed.success)return reply.code(400).send({error:"invalid_savings_goal"});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},include:{purses:{where:{type:"SAVINGS"},select:{id:true}}}});
+ if(!child)return reply.code(404).send({error:"child_not_found"});
+ const purse=child.purses[0];if(!purse)return reply.code(409).send({error:"family_setup_incomplete"});
+ const total=await prisma.ledgerEntry.aggregate({where:{purseId:purse.id},_sum:{amountAgorot:true}});
+ const balanceAgorot=total._sum.amountAgorot??0;
+ const achievedAt=balanceAgorot>=parsed.data.targetAgorot?new Date():null;
+ const existing=await prisma.savingsGoal.findFirst({where:{childId:child.id,active:true,redeemedAt:null},orderBy:{createdAt:"desc"}});
+ const goal=existing
+  ?await prisma.savingsGoal.update({where:{id:existing.id},data:{title:parsed.data.title,targetAgorot:parsed.data.targetAgorot,achievedAt}})
+  :await prisma.savingsGoal.create({data:{childId:child.id,title:parsed.data.title,targetAgorot:parsed.data.targetAgorot,achievedAt}});
+ return reply.code(existing?200:201).send({goal,balanceAgorot,withdrawalsUnlocked:Boolean(achievedAt)});
+});
+
+app.delete("/children/:childId/savings-goal",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_child"});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},select:{id:true}});if(!child)return reply.code(404).send({error:"child_not_found"});
+ await prisma.savingsGoal.updateMany({where:{childId:child.id,active:true,redeemedAt:null},data:{active:false}});
+ return {ok:true};
+});
+
+app.post("/children/:childId/savings/withdraw",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);const parsed=savingsWithdrawSchema.safeParse(request.body);
+ if(!params.success||!parsed.success)return reply.code(400).send({error:"invalid_withdrawal"});
+ try{
+  const result=await prisma.$transaction(async tx=>{
+   const child=await tx.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},include:{purses:{where:{type:"SAVINGS"},select:{id:true}}}});
+   if(!child)throw Object.assign(new Error("child_not_found"),{code:"CHILD_NOT_FOUND"});
+   const purse=child.purses[0];if(!purse)throw Object.assign(new Error("purses_missing"),{code:"PURSES_MISSING"});
+   await tx.$queryRawUnsafe('SELECT "id" FROM "Purse" WHERE "id" = $1::uuid FOR UPDATE',purse.id);
+   const total=await tx.ledgerEntry.aggregate({where:{purseId:purse.id},_sum:{amountAgorot:true}});
+   const balanceAgorot=total._sum.amountAgorot??0;
+   const goal=await tx.savingsGoal.findFirst({where:{childId:child.id,active:true,redeemedAt:null},orderBy:{createdAt:"desc"}});
+   if(goal&&balanceAgorot>=goal.targetAgorot&&!goal.achievedAt)await tx.savingsGoal.update({where:{id:goal.id},data:{achievedAt:new Date()}});
+   if(goal&&!goal.achievedAt&&balanceAgorot<goal.targetAgorot)throw Object.assign(new Error("savings_goal_locked"),{code:"SAVINGS_GOAL_LOCKED"});
+   if(parsed.data.amountAgorot>balanceAgorot)throw Object.assign(new Error("insufficient_savings"),{code:"INSUFFICIENT_SAVINGS"});
+   const entry=await tx.ledgerEntry.create({data:{familyId:user.familyId,purseId:purse.id,kind:"SAVINGS_GOAL_REDEEMED",amountAgorot:-parsed.data.amountAgorot,idempotencyKey:"savings-withdraw:"+parsed.data.idempotencyKey,note:parsed.data.note??"משיכה מקופת חיסכון"}});
+   return {entryId:entry.id,withdrawnAgorot:parsed.data.amountAgorot,balanceAgorot:balanceAgorot-parsed.data.amountAgorot};
+  });
+  return reply.code(201).send(result);
+ }catch(error){
+  const code=typeof error==="object"&&error!==null&&"code" in error?(error as {code?:string}).code:undefined;
+  if(code==="P2002")return reply.code(409).send({error:"duplicate_withdrawal"});
+  if(code==="CHILD_NOT_FOUND")return reply.code(404).send({error:"child_not_found"});
+  if(code==="PURSES_MISSING")return reply.code(409).send({error:"family_setup_incomplete"});
+  if(code==="SAVINGS_GOAL_LOCKED")return reply.code(409).send({error:"savings_goal_locked"});
+  if(code==="INSUFFICIENT_SAVINGS")return reply.code(409).send({error:"insufficient_savings"});
+  throw error;
+ }
+});
+
 app.post("/children/:childId/income",async(request,reply)=>{
  const user=await requireParent(request,reply);if(!user)return;
  const params=z.object({childId:z.string().uuid()}).safeParse(request.params);
