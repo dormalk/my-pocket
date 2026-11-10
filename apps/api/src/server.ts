@@ -134,7 +134,7 @@ app.post("/children",async(request,reply)=>{
   const user=await requireParent(request,reply);if(!user)return;
   const parsed=childSchema.safeParse(request.body);
   if(!parsed.success)return reply.code(400).send({error:"invalid_child",details:parsed.error.flatten().fieldErrors});
-  const child=await prisma.$transaction(tx=>tx.child.create({data:{familyId:user.familyId,name:parsed.data.name,birthYear:parsed.data.birthYear,avatar:parsed.data.avatar,purses:{create:[{type:"EXPENSES"},{type:"SAVINGS"},{type:"DONATION"}]}},include:{purses:{select:{id:true,type:true}}}}));
+  const child=await prisma.$transaction(async tx=>{const familyPolicy=await tx.allocationPolicy.findUnique({where:{familyId:user.familyId}});return tx.child.create({data:{familyId:user.familyId,name:parsed.data.name,birthYear:parsed.data.birthYear,avatar:parsed.data.avatar,purses:{create:[{type:"EXPENSES"},{type:"SAVINGS"},{type:"DONATION"}]},allocation:{create:{expensesBps:familyPolicy?.expensesBps??5000,savingsBps:familyPolicy?.savingsBps??3000,donationBps:familyPolicy?.donationBps??2000}}},include:{purses:{select:{id:true,type:true}}}});});
   return reply.code(201).send({child:{id:child.id,name:child.name,birthYear:child.birthYear,avatar:child.avatar,purses:child.purses.map(purse=>({...purse,balanceAgorot:0}))}});
 });
 
@@ -154,6 +154,21 @@ app.put("/allocation",async(request,reply)=>{
  const policy=await prisma.allocationPolicy.update({where:{familyId:user.familyId},data:{...parsed.data,effectiveAt:new Date()},select:{expensesBps:true,savingsBps:true,donationBps:true,effectiveAt:true}});
  return {policy};
 });
+app.get("/children/:childId/allocation",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_child"});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null}});if(!child)return reply.code(404).send({error:"child_not_found"});
+ const policy=await prisma.childAllocationPolicy.findUnique({where:{childId:child.id},select:{expensesBps:true,savingsBps:true,donationBps:true,effectiveAt:true}});
+ return {policy};
+});
+app.put("/children/:childId/allocation",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_child"});
+ const parsed=allocationSchema.safeParse(request.body);if(!parsed.success)return reply.code(400).send({error:"invalid_allocation"});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null}});if(!child)return reply.code(404).send({error:"child_not_found"});
+ const policy=await prisma.childAllocationPolicy.upsert({where:{childId:child.id},create:{childId:child.id,...parsed.data},update:{...parsed.data,effectiveAt:new Date()},select:{expensesBps:true,savingsBps:true,donationBps:true,effectiveAt:true}});
+ return {policy};
+});
 app.post("/children/:childId/income",async(request,reply)=>{
  const user=await requireParent(request,reply);if(!user)return;
  const params=z.object({childId:z.string().uuid()}).safeParse(request.params);
@@ -166,7 +181,7 @@ app.post("/children/:childId/income",async(request,reply)=>{
    const byType=new Map(child.purses.map(p=>[p.type,p]));
    const expenses=byType.get("EXPENSES"),savings=byType.get("SAVINGS"),donation=byType.get("DONATION");
    if(!expenses||!savings||!donation)throw Object.assign(new Error("purses_missing"),{code:"PURSES_MISSING"});
-   const policy=await tx.allocationPolicy.findUnique({where:{familyId:user.familyId}});
+   const policy=await tx.childAllocationPolicy.findUnique({where:{childId:child.id}});
    if(!policy)throw Object.assign(new Error("allocation_missing"),{code:"ALLOCATION_MISSING"});
    const savingsTotal=await tx.ledgerEntry.aggregate({where:{purseId:savings.id},_sum:{amountAgorot:true}});
    const savingsBalance=savingsTotal._sum.amountAgorot??0;
