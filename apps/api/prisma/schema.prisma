@@ -80,6 +80,7 @@ model Child {
   purses    Purse[]
   goals     SavingsGoal[]
   requests  CashRequest[]
+  @@index([familyId, archivedAt])
 }
 
 model Purse {
