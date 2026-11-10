@@ -80,6 +80,7 @@ model Child {
   purses    Purse[]
   allocation ChildAllocationPolicy?
   accessLink ChildAccessLink?
+  tasks     PurseTask[]
   goals     SavingsGoal[]
   requests  CashRequest[]
   @@index([familyId, archivedAt])
@@ -92,6 +93,7 @@ model Purse {
   createdAt DateTime   @default(now())
   child     Child      @relation(fields: [childId], references: [id], onDelete: Cascade)
   entries   LedgerEntry[]
+  tasks     PurseTask[]
   @@unique([childId, type])
 }
 
@@ -171,4 +173,48 @@ model ChildAccessLink {
   revokedAt DateTime?
   child     Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
   @@index([tokenHash, revokedAt])
+}
+
+
+model PurseTask {
+  id                 String         @id @default(uuid()) @db.Uuid
+  childId            String         @db.Uuid
+  purseId            String         @db.Uuid
+  title              String
+  frequency          TaskFrequency
+  amountAgorot       Int
+  weeklyRequiredCount Int           @default(3)
+  active             Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  child              Child          @relation(fields: [childId], references: [id], onDelete: Cascade)
+  purse              Purse          @relation(fields: [purseId], references: [id], onDelete: Cascade)
+  approvals          TaskApproval[]
+  rewards            TaskReward[]
+  @@index([childId, active])
+  @@index([purseId, active])
+}
+
+enum TaskFrequency {
+  DAILY
+  WEEKLY
+}
+
+model TaskApproval {
+  id          String    @id @default(uuid()) @db.Uuid
+  taskId      String    @db.Uuid
+  completedOn DateTime  @db.Date
+  approvedById String   @db.Uuid
+  createdAt   DateTime  @default(now())
+  task        PurseTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  @@unique([taskId, completedOn])
+  @@index([taskId, completedOn])
+}
+
+model TaskReward {
+  id          String    @id @default(uuid()) @db.Uuid
+  taskId      String    @db.Uuid
+  weekStart   DateTime  @db.Date
+  createdAt   DateTime  @default(now())
+  task        PurseTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  @@unique([taskId, weekStart])
 }
