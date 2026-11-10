@@ -1,4 +1,4 @@
-const CACHE_NAME = "my-pocket-shell-v1";
+const CACHE_NAME = "growise-shell-v2";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/pwa-icon.svg"];
 
 self.addEventListener("install", event => {
