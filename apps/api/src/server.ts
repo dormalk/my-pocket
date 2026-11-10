@@ -9,7 +9,9 @@ app.get("/health",async()=>({status:"ok",service:"my-pocket-api",mode:"virtual-m
 
 app.setErrorHandler((error,_request,reply)=>{
   app.log.error(error);
-  reply.status(error.statusCode&&error.statusCode<500?error.statusCode:500).send({error:error.statusCode&&error.statusCode<500?"request_error":"internal_error"});
+  const candidate=error as {statusCode?:unknown};
+  const statusCode=typeof candidate.statusCode==="number"?candidate.statusCode:500;
+  reply.status(statusCode<500?statusCode:500).send({error:statusCode<500?"request_error":"internal_error"});
 });
 
 try { await app.listen({port:env.PORT,host:env.HOST}); }
