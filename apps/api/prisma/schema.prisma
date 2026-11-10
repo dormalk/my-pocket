@@ -150,3 +150,13 @@ model CashRequest {
   child        Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
   @@index([childId, status, createdAt])
 }
+
+model ChildAllocationPolicy {
+  id          String   @id @default(uuid()) @db.Uuid
+  childId     String   @unique @db.Uuid
+  expensesBps Int
+  savingsBps  Int
+  donationBps Int
+  effectiveAt DateTime @default(now())
+  child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+}
