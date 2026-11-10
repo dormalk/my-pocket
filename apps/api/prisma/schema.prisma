@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PARENT
+  CHILD
+}
+
+enum PurseType {
+  EXPENSES
+  SAVINGS
+  DONATION
+}
+
+enum LedgerKind {
+  INCOME_ALLOCATION
+  EXPENSE
+  CASH_REQUEST_PAID
+  INTEREST_CREDIT
+  SAVINGS_GOAL_REDEEMED
+  DONATION_COMPLETED
+  REVERSAL
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model Family {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  timezone    String   @default("Asia/Jerusalem")
+  createdAt   DateTime @default(now())
+  users       User[]
+  children    Child[]
+  allocation  AllocationPolicy?
+  interest    InterestPolicy?
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  familyId     String   @db.Uuid
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(PARENT)
+  createdAt    DateTime @default(now())
+  family       Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+}
+
+model Child {
+  id        String   @id @default(uuid()) @db.Uuid
+  familyId  String   @db.Uuid
+  name      String
+  birthYear Int?
+  createdAt DateTime @default(now())
+  family    Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  purses    Purse[]
+  goals     SavingsGoal[]
+  requests  CashRequest[]
+}
+
+model Purse {
+  id        String    @id @default(uuid()) @db.Uuid
+  childId   String    @db.Uuid
+  type      PurseType
+  createdAt DateTime  @default(now())
+  child     Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  entries   LedgerEntry[]
+  @@unique([childId, type])
+}
+
+model LedgerEntry {
+  id             String     @id @default(uuid()) @db.Uuid
+  familyId       String     @db.Uuid
+  purseId        String     @db.Uuid
+  kind           LedgerKind
+  amountAgorot   Int
+  idempotencyKey String
+  note           String?
+  createdAt      DateTime   @default(now())
+  purse          Purse      @relation(fields: [purseId], references: [id], onDelete: Restrict)
+  @@unique([familyId, idempotencyKey])
+  @@index([purseId, createdAt])
+  @@index([familyId, createdAt])
+}
+
+model AllocationPolicy {
+  id           String   @id @default(uuid()) @db.Uuid
+  familyId     String   @unique @db.Uuid
+  expensesBps  Int
+  savingsBps   Int
+  donationBps  Int
+  effectiveAt  DateTime @default(now())
+  family       Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+}
+
+model InterestPolicy {
+  id          String   @id @default(uuid()) @db.Uuid
+  familyId    String   @unique @db.Uuid
+  annualBps   Int      @default(0)
+  effectiveAt DateTime @default(now())
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+}
+
+model SavingsGoal {
+  id          String    @id @default(uuid()) @db.Uuid
+  childId     String    @db.Uuid
+  title       String
+  targetAgorot Int
+  active      Boolean   @default(true)
+  achievedAt  DateTime?
+  redeemedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  child       Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  @@index([childId, active])
+}
+
+model CashRequest {
+  id          String        @id @default(uuid()) @db.Uuid
+  childId     String        @db.Uuid
+  amountAgorot Int
+  reason      String?
+  status      RequestStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  child       Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+  @@index([childId, status, createdAt])
+}
