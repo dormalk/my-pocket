@@ -5,6 +5,7 @@ import { PrismaClient, UserRole } from "@prisma/client";
 import argon2 from "argon2";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
+import { allocateIncome, validatePercentages } from "@mypocket/domain";
 
 const envSchema=z.object({
   PORT:z.coerce.number().int().positive().default(4000),
@@ -127,6 +128,56 @@ app.post("/children",async(request,reply)=>{
   if(!parsed.success)return reply.code(400).send({error:"invalid_child",details:parsed.error.flatten().fieldErrors});
   const child=await prisma.$transaction(tx=>tx.child.create({data:{familyId:user.familyId,name:parsed.data.name,birthYear:parsed.data.birthYear,purses:{create:[{type:"EXPENSES"},{type:"SAVINGS"},{type:"DONATION"}]}},include:{purses:{select:{id:true,type:true}}}}));
   return reply.code(201).send({child:{id:child.id,name:child.name,birthYear:child.birthYear,purses:child.purses.map(purse=>({...purse,balanceAgorot:0}))}});
+});
+
+
+const allocationSchema=z.object({expensesBps:z.number().int().min(0).max(10000),savingsBps:z.number().int().min(0).max(10000),donationBps:z.number().int().min(0).max(10000)}).superRefine((value,ctx)=>{if(value.expensesBps+value.savingsBps+value.donationBps!==10000)ctx.addIssue({code:"custom",message:"אחוזי החלוקה חייבים להסתכם ב-100%"});});
+const incomeSchema=z.object({amountAgorot:z.number().int().positive().max(2147483647),idempotencyKey:z.string().min(8).max(100),note:z.string().trim().max(160).optional()});
+app.get("/allocation",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const policy=await prisma.allocationPolicy.findUnique({where:{familyId:user.familyId},select:{expensesBps:true,savingsBps:true,donationBps:true,effectiveAt:true}});
+ return {policy};
+});
+app.put("/allocation",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const parsed=allocationSchema.safeParse(request.body);
+ if(!parsed.success)return reply.code(400).send({error:"invalid_allocation",details:parsed.error.flatten().fieldErrors});
+ try{validatePercentages(parsed.data);}catch{return reply.code(400).send({error:"invalid_allocation"});}
+ const policy=await prisma.allocationPolicy.update({where:{familyId:user.familyId},data:{...parsed.data,effectiveAt:new Date()},select:{expensesBps:true,savingsBps:true,donationBps:true,effectiveAt:true}});
+ return {policy};
+});
+app.post("/children/:childId/income",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);
+ const parsed=incomeSchema.safeParse(request.body);
+ if(!params.success||!parsed.success)return reply.code(400).send({error:"invalid_income"});
+ try{
+  const result=await prisma.$transaction(async tx=>{
+   const child=await tx.child.findFirst({where:{id:params.data.childId,familyId:user.familyId},include:{purses:true}});
+   if(!child)throw Object.assign(new Error("child_not_found"),{code:"CHILD_NOT_FOUND"});
+   const byType=new Map(child.purses.map(p=>[p.type,p]));
+   const expenses=byType.get("EXPENSES"),savings=byType.get("SAVINGS"),donation=byType.get("DONATION");
+   if(!expenses||!savings||!donation)throw Object.assign(new Error("purses_missing"),{code:"PURSES_MISSING"});
+   const policy=await tx.allocationPolicy.findUnique({where:{familyId:user.familyId}});
+   if(!policy)throw Object.assign(new Error("allocation_missing"),{code:"ALLOCATION_MISSING"});
+   const savingsTotal=await tx.ledgerEntry.aggregate({where:{purseId:savings.id},_sum:{amountAgorot:true}});
+   const savingsBalance=savingsTotal._sum.amountAgorot??0;
+   const goal=await tx.savingsGoal.findFirst({where:{childId:child.id,active:true,redeemedAt:null},orderBy:{createdAt:"desc"}});
+   const allocation=allocateIncome(parsed.data.amountAgorot,policy,savingsBalance,goal?.targetAgorot??null);
+   const rows=[{purseId:expenses.id,amountAgorot:allocation.expenses,suffix:"expenses"},{purseId:savings.id,amountAgorot:allocation.savings,suffix:"savings"},{purseId:donation.id,amountAgorot:allocation.donation,suffix:"donation"}].filter(row=>row.amountAgorot>0);
+   await tx.ledgerEntry.createMany({data:rows.map(row=>({familyId:user.familyId,purseId:row.purseId,kind:"INCOME_ALLOCATION",amountAgorot:row.amountAgorot,idempotencyKey:parsed.data.idempotencyKey+":"+row.suffix,note:parsed.data.note??"הפקדת דמי כיס"}))});
+   const achieved=goal&&savingsBalance+allocation.savings>=goal.targetAgorot;
+   if(achieved&&!goal.achievedAt)await tx.savingsGoal.update({where:{id:goal.id},data:{achievedAt:new Date()}});
+   return {childId:child.id,allocation,savingsGoalAchieved:Boolean(achieved)};
+  });
+  return reply.code(201).send(result);
+ }catch(error){
+  const code=typeof error==="object"&&error!==null&&"code" in error?(error as {code?:string}).code:undefined;
+  if(code==="P2002")return reply.code(409).send({error:"duplicate_income"});
+  if(code==="CHILD_NOT_FOUND")return reply.code(404).send({error:"child_not_found"});
+  if(code==="PURSES_MISSING"||code==="ALLOCATION_MISSING")return reply.code(409).send({error:"family_setup_incomplete"});
+  throw error;
+ }
 });
 
 app.setErrorHandler((error,_request,reply)=>{
