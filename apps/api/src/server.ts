@@ -105,6 +105,30 @@ app.post("/auth/logout",async(request,reply)=>{
   return {ok:true};
 });
 
+
+const childSchema=z.object({name:z.string().trim().min(1).max(60),birthYear:z.number().int().min(2000).max(new Date().getFullYear()).optional()});
+async function requireParent(request:FastifyRequest,reply:FastifyReply){
+  const user=await currentUser(request);
+  if(!user){await reply.code(401).send({error:"not_authenticated"});return null;}
+  if(user.role!==UserRole.PARENT){await reply.code(403).send({error:"parent_access_required"});return null;}
+  return user;
+}
+app.get("/children",async(request,reply)=>{
+  const user=await requireParent(request,reply);if(!user)return;
+  const children=await prisma.child.findMany({where:{familyId:user.familyId},orderBy:{createdAt:"asc"},include:{purses:{select:{id:true,type:true}}}});
+  const purseIds=children.flatMap(child=>child.purses.map(purse=>purse.id));
+  const totals=purseIds.length?await prisma.ledgerEntry.groupBy({by:["purseId"],where:{purseId:{in:purseIds}},_sum:{amountAgorot:true}}):[];
+  const balances=new Map(totals.map(item=>[item.purseId,item._sum.amountAgorot??0]));
+  return {children:children.map(child=>({id:child.id,name:child.name,birthYear:child.birthYear,purses:child.purses.map(purse=>({id:purse.id,type:purse.type,balanceAgorot:balances.get(purse.id)??0}))}))};
+});
+app.post("/children",async(request,reply)=>{
+  const user=await requireParent(request,reply);if(!user)return;
+  const parsed=childSchema.safeParse(request.body);
+  if(!parsed.success)return reply.code(400).send({error:"invalid_child",details:parsed.error.flatten().fieldErrors});
+  const child=await prisma.$transaction(tx=>tx.child.create({data:{familyId:user.familyId,name:parsed.data.name,birthYear:parsed.data.birthYear,purses:{create:[{type:"EXPENSES"},{type:"SAVINGS"},{type:"DONATION"}]}},include:{purses:{select:{id:true,type:true}}}}));
+  return reply.code(201).send({child:{id:child.id,name:child.name,birthYear:child.birthYear,purses:child.purses.map(purse=>({...purse,balanceAgorot:0}))}});
+});
+
 app.setErrorHandler((error,_request,reply)=>{
   app.log.error(error);
   const candidate=error as {statusCode?:unknown};
