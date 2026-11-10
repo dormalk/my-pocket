@@ -178,6 +178,24 @@ app.post("/children",async(request,reply)=>{
 
 
 const allocationSchema=z.object({expensesBps:z.number().int().min(0).max(10000),savingsBps:z.number().int().min(0).max(10000),donationBps:z.number().int().min(0).max(10000)}).superRefine((value,ctx)=>{if(value.expensesBps+value.savingsBps+value.donationBps!==10000)ctx.addIssue({code:"custom",message:"אחוזי החלוקה חייבים להסתכם ב-100%"});});
+
+function localDateRange(timezone:string){
+ const parts=new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+ const [year,month,day]=parts.split("-").map(Number);
+ const today=new Date(Date.UTC(year,month-1,day));
+ const weekday=(today.getUTCDay()+6)%7;
+ const weekStart=new Date(today);weekStart.setUTCDate(today.getUTCDate()-weekday);
+ const nextWeek=new Date(weekStart);nextWeek.setUTCDate(weekStart.getUTCDate()+7);
+ return {today,weekStart,nextWeek};
+}
+const taskSchema=z.object({
+ purseId:z.string().uuid(),
+ title:z.string().trim().min(1).max(80),
+ frequency:z.enum(["DAILY","WEEKLY"]),
+ amountAgorot:z.number().int().positive().max(2147483647),
+ weeklyRequiredCount:z.number().int().min(2).max(7).default(3)
+});
+
 const incomeSchema=z.object({amountAgorot:z.number().int().positive().max(2147483647),idempotencyKey:z.string().min(8).max(100),note:z.string().trim().max(160).optional()});
 app.get("/allocation",async(request,reply)=>{
  const user=await requireParent(request,reply);if(!user)return;
@@ -207,6 +225,65 @@ app.put("/children/:childId/allocation",async(request,reply)=>{
  const policy=await prisma.childAllocationPolicy.upsert({where:{childId:child.id},create:{childId:child.id,...parsed.data},update:{...parsed.data,effectiveAt:new Date()},select:{expensesBps:true,savingsBps:true,donationBps:true,effectiveAt:true}});
  return {policy};
 });
+
+app.get("/children/:childId/tasks",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_child"});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},select:{id:true,family:{select:{timezone:true}}}});
+ if(!child)return reply.code(404).send({error:"child_not_found"});
+ const {today,weekStart,nextWeek}=localDateRange(child.family.timezone);
+ const tasks=await prisma.purseTask.findMany({where:{childId:child.id,active:true},orderBy:{createdAt:"asc"},include:{purse:{select:{type:true}},approvals:{where:{completedOn:{gte:weekStart,lt:nextWeek}},select:{completedOn:true}}}});
+ return {tasks:tasks.map(task=>({id:task.id,purseId:task.purseId,purseType:task.purse.type,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))};
+});
+app.post("/children/:childId/tasks",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);const parsed=taskSchema.safeParse(request.body);
+ if(!params.success||!parsed.success)return reply.code(400).send({error:"invalid_task",details:parsed.success?undefined:parsed.error.flatten().fieldErrors});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},select:{id:true}});
+ if(!child)return reply.code(404).send({error:"child_not_found"});
+ const purse=await prisma.purse.findFirst({where:{id:parsed.data.purseId,childId:child.id},select:{id:true}});
+ if(!purse)return reply.code(400).send({error:"invalid_task_purse"});
+ const task=await prisma.purseTask.create({data:{childId:child.id,purseId:purse.id,title:parsed.data.title,frequency:parsed.data.frequency,amountAgorot:parsed.data.amountAgorot,weeklyRequiredCount:parsed.data.frequency==="DAILY"?1:parsed.data.weeklyRequiredCount},include:{purse:{select:{type:true}}}});
+ return reply.code(201).send({task:{id:task.id,purseId:task.purseId,purseType:task.purse.type,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:0,approvedToday:false}});
+});
+app.delete("/children/:childId/tasks/:taskId",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid(),taskId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_task"});
+ const result=await prisma.purseTask.updateMany({where:{id:params.data.taskId,childId:params.data.childId,child:{familyId:user.familyId,archivedAt:null},active:true},data:{active:false}});
+ if(!result.count)return reply.code(404).send({error:"task_not_found"});
+ return {ok:true};
+});
+app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid(),taskId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_task"});
+ try{
+  const result=await prisma.$transaction(async tx=>{
+   const task=await tx.purseTask.findFirst({where:{id:params.data.taskId,childId:params.data.childId,active:true,child:{familyId:user.familyId,archivedAt:null}},include:{child:{select:{familyId:true,family:{select:{timezone:true}}}}}});
+   if(!task)throw Object.assign(new Error("task_not_found"),{code:"TASK_NOT_FOUND"});
+   const {today,weekStart,nextWeek}=localDateRange(task.child.family.timezone);
+   const approval=await tx.taskApproval.create({data:{taskId:task.id,completedOn:today,approvedById:user.id}});
+   if(task.frequency==="DAILY"){
+    await tx.ledgerEntry.create({data:{familyId:task.child.familyId,purseId:task.purseId,kind:"TASK_REWARD",amountAgorot:task.amountAgorot,idempotencyKey:"task:"+task.id+":"+today.toISOString().slice(0,10),note:"תגמול משימה: "+task.title}});
+    return {credited:true,amountAgorot:task.amountAgorot,approvedCountThisWeek:1,weeklyRequiredCount:1,frequency:task.frequency};
+   }
+   const approvedCountThisWeek=await tx.taskApproval.count({where:{taskId:task.id,completedOn:{gte:weekStart,lt:nextWeek}}});
+   let credited=false;
+   if(approvedCountThisWeek>=task.weeklyRequiredCount){
+    await tx.taskReward.create({data:{taskId:task.id,weekStart}});
+    await tx.ledgerEntry.create({data:{familyId:task.child.familyId,purseId:task.purseId,kind:"TASK_REWARD",amountAgorot:task.amountAgorot,idempotencyKey:"task-week:"+task.id+":"+weekStart.toISOString().slice(0,10),note:"תגמול שבועי על המשימה: "+task.title}});
+    credited=true;
+   }
+   return {credited,amountAgorot:credited?task.amountAgorot:0,approvedCountThisWeek,weeklyRequiredCount:task.weeklyRequiredCount,frequency:task.frequency};
+  });
+  return reply.code(201).send(result);
+ }catch(error){
+  const code=typeof error==="object"&&error!==null&&"code" in error?(error as {code?:string}).code:undefined;
+  if(code==="P2002")return reply.code(409).send({error:"task_already_approved_today"});
+  if(code==="TASK_NOT_FOUND")return reply.code(404).send({error:"task_not_found"});
+  throw error;
+ }
+});
+
 app.post("/children/:childId/income",async(request,reply)=>{
  const user=await requireParent(request,reply);if(!user)return;
  const params=z.object({childId:z.string().uuid()}).safeParse(request.params);
