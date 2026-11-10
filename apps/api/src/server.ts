@@ -313,8 +313,15 @@ app.post("/children/:childId/income",async(request,reply)=>{
    const byType=new Map(child.purses.map(p=>[p.type,p]));
    const expenses=byType.get("EXPENSES"),savings=byType.get("SAVINGS"),donation=byType.get("DONATION");
    if(!expenses||!savings||!donation)throw Object.assign(new Error("purses_missing"),{code:"PURSES_MISSING"});
-   const policy=await tx.childAllocationPolicy.findUnique({where:{childId:child.id}});
-   if(!policy)throw Object.assign(new Error("allocation_missing"),{code:"ALLOCATION_MISSING"});
+   let policy=await tx.childAllocationPolicy.findUnique({where:{childId:child.id}});
+   if(!policy){
+    const familyPolicy=await tx.allocationPolicy.findUnique({where:{familyId:user.familyId}});
+    policy=await tx.childAllocationPolicy.upsert({
+     where:{childId:child.id},
+     create:{childId:child.id,expensesBps:familyPolicy?.expensesBps??5000,savingsBps:familyPolicy?.savingsBps??3000,donationBps:familyPolicy?.donationBps??2000,effectiveAt:familyPolicy?.effectiveAt??new Date()},
+     update:{}
+    });
+   }
    const savingsTotal=await tx.ledgerEntry.aggregate({where:{purseId:savings.id},_sum:{amountAgorot:true}});
    const savingsBalance=savingsTotal._sum.amountAgorot??0;
    const goal=await tx.savingsGoal.findFirst({where:{childId:child.id,active:true,redeemedAt:null},orderBy:{createdAt:"desc"}});
