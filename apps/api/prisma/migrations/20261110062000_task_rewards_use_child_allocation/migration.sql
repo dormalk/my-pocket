@@ -1,0 +1,1 @@
+ALTER TABLE "PurseTask" ALTER COLUMN "purseId" DROP NOT NULL;
