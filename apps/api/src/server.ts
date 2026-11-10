@@ -314,12 +314,19 @@ app.post("/children/:childId/income",async(request,reply)=>{
    const expenses=byType.get("EXPENSES"),savings=byType.get("SAVINGS"),donation=byType.get("DONATION");
    if(!expenses||!savings||!donation)throw Object.assign(new Error("purses_missing"),{code:"PURSES_MISSING"});
    let policy=await tx.childAllocationPolicy.findUnique({where:{childId:child.id}});
-   if(!policy){
-    const familyPolicy=await tx.allocationPolicy.findUnique({where:{familyId:user.familyId}});
+   const familyPolicy=await tx.allocationPolicy.findUnique({where:{familyId:user.familyId}});
+   const isValidSplit=(value:{expensesBps:number;savingsBps:number;donationBps:number}|null|undefined)=>{
+    if(!value)return false;
+    const values=[value.expensesBps,value.savingsBps,value.donationBps];
+    return values.every(v=>Number.isSafeInteger(v)&&v>=0&&v<=10000)&&values.reduce((sum,v)=>sum+v,0)===10000;
+   };
+   // Repair legacy/corrupt saved splits before allocating a deposit.
+   if(!isValidSplit(policy)){
+    const fallback=isValidSplit(familyPolicy)?familyPolicy:{expensesBps:5000,savingsBps:3000,donationBps:2000};
     policy=await tx.childAllocationPolicy.upsert({
      where:{childId:child.id},
-     create:{childId:child.id,expensesBps:familyPolicy?.expensesBps??5000,savingsBps:familyPolicy?.savingsBps??3000,donationBps:familyPolicy?.donationBps??2000,effectiveAt:familyPolicy?.effectiveAt??new Date()},
-     update:{}
+     create:{childId:child.id,expensesBps:fallback.expensesBps,savingsBps:fallback.savingsBps,donationBps:fallback.donationBps,effectiveAt:familyPolicy?.effectiveAt??new Date()},
+     update:{expensesBps:fallback.expensesBps,savingsBps:fallback.savingsBps,donationBps:fallback.donationBps,effectiveAt:new Date()}
     });
    }
    const savingsTotal=await tx.ledgerEntry.aggregate({where:{purseId:savings.id},_sum:{amountAgorot:true}});
