@@ -14,7 +14,7 @@ const money=(n:number)=>new Intl.NumberFormat("he-IL",{style:"currency",currency
 async function api<T>(path:string,options:RequestInit={}):Promise<T>{const response=await fetch("/api"+path,{...options,credentials:"include",headers:{...(options.body!==undefined&&options.body!==null?{"Content-Type":"application/json"}:{}),...options.headers}});const data=await response.json().catch(()=>({}));if(!response.ok){const messages:Record<string,string>={account_already_exists:"כבר קיים חשבון עם כתובת המייל הזו",invalid_email_or_password:"כתובת המייל או הסיסמה אינן נכונות",not_authenticated:"צריך להתחבר מחדש",invalid_child:"פרטי הקופה אינם תקינים",child_not_found:"הקופה לא נמצאה או שכבר הוסרה"};const code=typeof data.error==="string"?data.error:"unknown_error";throw new Error(messages[code]??("שגיאה מהשרת ("+response.status+"): "+code));}return data as T;}
 export default function App(){
  const [user,setUser]=useState<User|null>(null),[authMode,setAuthMode]=useState<AuthMode>("register"),[view,setView]=useState<"parent"|"child">("parent");
- const shareToken=window.location.pathname.match(/^\\/kid\\/([A-Za-z0-9_-]{20,})\\/?$/)?.[1]??null;
+ const shareToken=window.location.pathname.match(/^\/kid\/([A-Za-z0-9_-]{20,})\/?$/)?.[1]??null;
  const [shareActive,setShareActive]=useState(false);
  const [familyName,setFamilyName]=useState(""),[parentName,setParentName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState("");
  const [children,setChildren]=useState<Child[]>([]),[selectedId,setSelectedId]=useState(""),[childName,setChildName]=useState(""),[birthYear,setBirthYear]=useState(""),[childAvatar,setChildAvatar]=useState("🧒"),[deleteConfirm,setDeleteConfirm]=useState(false);
