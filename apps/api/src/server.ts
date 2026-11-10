@@ -262,6 +262,7 @@ app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
   const result=await prisma.$transaction(async tx=>{
    const task=await tx.purseTask.findFirst({where:{id:params.data.taskId,childId:params.data.childId,active:true,child:{familyId:user.familyId,archivedAt:null}},include:{child:{select:{familyId:true,family:{select:{timezone:true}}}}}});
    if(!task)throw Object.assign(new Error("task_not_found"),{code:"TASK_NOT_FOUND"});
+   await tx.$queryRawUnsafe('SELECT "id" FROM "PurseTask" WHERE "id" = $1::uuid FOR UPDATE',task.id);
    const {today,weekStart,nextWeek}=localDateRange(task.child.family.timezone);
    if(task.frequency==="WEEKLY"){
     const currentCount=await tx.taskApproval.count({where:{taskId:task.id,completedOn:{gte:weekStart,lt:nextWeek}}});
