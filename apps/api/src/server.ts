@@ -127,7 +127,7 @@ app.get("/public/child/:token",async(request,reply)=>{
   const balances=new Map(totals.map(item=>[item.purseId,item._sum.amountAgorot??0]));
   const {today,weekStart,nextWeek}=localDateRange(link.child.family.timezone);
   const tasks=await prisma.purseTask.findMany({where:{childId:link.child.id,active:true},include:{approvals:{where:{completedOn:{gte:weekStart,lt:nextWeek}},select:{completedOn:true}}}});
-  return {child:{id:link.child.id,name:link.child.name,birthYear:link.child.birthYear,avatar:link.child.avatar,purses:link.child.purses.map(p=>({id:p.id,type:p.type,balanceAgorot:balances.get(p.id)??0})),savingsGoal:link.child.goals[0]??null,tasks:tasks.map(task=>({id:task.id,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))}};
+  return {child:{id:link.child.id,name:link.child.name,ageBand:link.child.birthYear===null?"middle":new Date().getFullYear()-link.child.birthYear<=7?"young":new Date().getFullYear()-link.child.birthYear>=11?"older":"middle",avatar:link.child.avatar,purses:link.child.purses.map(p=>({id:p.id,type:p.type,balanceAgorot:balances.get(p.id)??0})),savingsGoal:link.child.goals[0]??null,tasks:tasks.map(task=>({id:task.id,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))}};
 });
 
 app.get("/children",async(request,reply)=>{
