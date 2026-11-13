@@ -120,14 +120,14 @@ app.get("/public/child/:token",async(request,reply)=>{
   const params=z.object({token:publicChildTokenSchema}).safeParse(request.params);
   reply.header("Cache-Control","no-store, private").header("Referrer-Policy","no-referrer").header("X-Robots-Tag","noindex, nofollow");
   if(!params.success)return reply.code(404).send({error:"share_link_not_found"});
-  const link=await prisma.childAccessLink.findFirst({where:{tokenHash:tokenHash(params.data.token),revokedAt:null},include:{child:{select:{id:true,name:true,avatar:true,archivedAt:true,purses:{select:{id:true,type:true}},goals:{where:{active:true,redeemedAt:null},orderBy:{createdAt:"desc"},take:1,select:{title:true,targetAgorot:true,achievedAt:true}},family:{select:{timezone:true}}}}}});
+  const link=await prisma.childAccessLink.findFirst({where:{tokenHash:tokenHash(params.data.token),revokedAt:null},include:{child:{select:{id:true,name:true,birthYear:true,avatar:true,archivedAt:true,purses:{select:{id:true,type:true}},goals:{where:{active:true,redeemedAt:null},orderBy:{createdAt:"desc"},take:1,select:{title:true,targetAgorot:true,achievedAt:true}},family:{select:{timezone:true}}}}}});
   if(!link||link.child.archivedAt)return reply.code(404).send({error:"share_link_not_found"});
   const purseIds=link.child.purses.map(p=>p.id);
   const totals=purseIds.length?await prisma.ledgerEntry.groupBy({by:["purseId"],where:{purseId:{in:purseIds}},_sum:{amountAgorot:true}}):[];
   const balances=new Map(totals.map(item=>[item.purseId,item._sum.amountAgorot??0]));
   const {today,weekStart,nextWeek}=localDateRange(link.child.family.timezone);
   const tasks=await prisma.purseTask.findMany({where:{childId:link.child.id,active:true},include:{approvals:{where:{completedOn:{gte:weekStart,lt:nextWeek}},select:{completedOn:true}}}});
-  return {child:{id:link.child.id,name:link.child.name,avatar:link.child.avatar,purses:link.child.purses.map(p=>({id:p.id,type:p.type,balanceAgorot:balances.get(p.id)??0})),savingsGoal:link.child.goals[0]??null,tasks:tasks.map(task=>({id:task.id,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))}};
+  return {child:{id:link.child.id,name:link.child.name,birthYear:link.child.birthYear,avatar:link.child.avatar,purses:link.child.purses.map(p=>({id:p.id,type:p.type,balanceAgorot:balances.get(p.id)??0})),savingsGoal:link.child.goals[0]??null,tasks:tasks.map(task=>({id:task.id,title:task.title,frequency:task.frequency,amountAgorot:task.amountAgorot,weeklyRequiredCount:task.weeklyRequiredCount,approvedCountThisWeek:task.approvals.length,approvedToday:task.approvals.some(a=>a.completedOn.getTime()===today.getTime()),weekStart:weekStart.toISOString().slice(0,10)}))}};
 });
 
 app.get("/children",async(request,reply)=>{
