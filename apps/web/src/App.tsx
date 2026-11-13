@@ -9,7 +9,7 @@ type AuthMode="login"|"register";
 type AllocationPolicy={expensesBps:number;savingsBps:number;donationBps:number;effectiveAt:string};
 type SavingsGoal={id:string;title:string;targetAgorot:number;active:boolean;achievedAt:string|null;redeemedAt:string|null};
 type SavingsGoalState={goal:SavingsGoal|null;balanceAgorot:number;withdrawalsUnlocked:boolean};
-type SharedChild=Pick<Child,"id"|"name"|"birthYear"|"avatar"|"purses">&{tasks:PurseTask[];savingsGoal:{title:string;targetAgorot:number;achievedAt:string|null}|null};
+type SharedChild=Pick<Child,"id"|"name"|"avatar"|"purses">&{ageBand:"young"|"middle"|"older";tasks:PurseTask[];savingsGoal:{title:string;targetAgorot:number;achievedAt:string|null}|null};
 type BeforeInstallPromptEvent=Event&{prompt:()=>Promise<void>;userChoice:Promise<{outcome:"accepted"|"dismissed";platform:string}>};
 const meta:Record<PurseType,{label:string;icon:string;description:string;className:string}>={EXPENSES:{label:"הוצאות",icon:"🛍️",description:"לדברים שכיף לקנות",className:"expenses"},SAVINGS:{label:"חיסכון",icon:"🚀",description:"מגשימים חלום גדול",className:"savings"},DONATION:{label:"תרומה",icon:"💛",description:"עושים טוב בעולם",className:"donation"}};
 const childAvatars=["🧒","👧","👦","🦊","🐼","🐸","🦁","🐯","🐵","🐰","🐻","🐨","🐱","🐶","🦄","🐲","🚀","⭐"];
@@ -81,18 +81,18 @@ function PwaInstallButton(){
  return <div className="pwa-install-wrap"><button type="button" className="pwa-install-button" onClick={install}>⬇ {canInstall?"התקנת האפליקציה":"התקנה / עזרה"}</button>{help&&<div className="pwa-help" role="status"><b>איך מתקינים?</b><span>ב־iPhone: פותחים ב־Safari, לוחצים על שיתוף ואז „הוספה למסך הבית”.</span><span>ב־Android או במחשב: פותחים את תפריט הדפדפן ובוחרים „התקנת האפליקציה” או „הוספה למסך הבית”.</span></div>}</div>;
 }
 
-function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:Pick<Child,"name"|"birthYear"|"avatar"|"purses">;tasks:PurseTask[];savingsGoal:{title:string;targetAgorot:number;achievedAt:string|null}|null;onRefresh?:()=>void;updatedAt?:Date}){
+function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:Pick<Child,"name"|"birthYear"|"avatar"|"purses">&{ageBand?:"young"|"middle"|"older"};tasks:PurseTask[];savingsGoal:{title:string;targetAgorot:number;achievedAt:string|null}|null;onRefresh?:()=>void;updatedAt?:Date}){
  const total=child.purses.reduce((sum,p)=>sum+p.balanceAgorot,0);
  const savings=child.purses.find(p=>p.type==="SAVINGS")?.balanceAgorot??0;
  const age=child.birthYear?new Date().getFullYear()-child.birthYear:null;
- const ageBand=age!==null&&age<=7?"young":age!==null&&age>=11?"older":"middle";
+ const ageBand=child.ageBand??(age!==null&&age<=7?"young":age!==null&&age>=11?"older":"middle");
  const copy=ageBand==="young"?{greeting:"איזה כיף שבאת להרפתקה!",journey:"הדרך אל האוצר",purses:"האוצרות שלי",tasks:"המשימות שלי",tip:"כל מטבע קטן עוזר לחלום לגדול!",level:"מגלי אוצרות"}:ageBand==="older"?{greeting:"ההתקדמות שלך נראית מצוין.",journey:"תוכנית החיסכון שלי",purses:"היתרות שלי",tasks:"המשימות והתגמולים שלי",tip:"תכנון קטן היום נותן לך יותר אפשרויות מחר.",level:"מתכנני אוצר"}:{greeting:"כל צעד קטן מקרב אותך לחלום!",journey:"המסע אל החלום",purses:"שלוש הקופות שלי",tasks:"המשימות שלי",tip:"כשחוסכים קצת בכל פעם, החלום מתקרב!",level:"הרפתקני אוצר"} as const;
  const completedTasks=tasks.filter(task=>task.frequency==="DAILY"?task.approvedToday:task.approvedCountThisWeek>=task.weeklyRequiredCount).length;
  const badges=[{icon:"🪙",title:"צעד ראשון",earned:total>0},{icon:"🚀",title:"מתקדמים בחיסכון",earned:savings>0},{icon:"⭐",title:"משימה הושלמה",earned:tasks.some(task=>task.approvedToday||task.approvedCountThisWeek>0)},{icon:"💛",title:"לב נדיב",earned:(child.purses.find(p=>p.type==="DONATION")?.balanceAgorot??0)>0},{icon:"🏆",title:"החלום הושג",earned:Boolean(savingsGoal?.achievedAt)}];
  const progress=savingsGoal?Math.min(100,Math.max(0,savings/savingsGoal.targetAgorot*100)):0;
  return <div className={"child-world child-age-"+ageBand}>
   <section className="adventure-hero">
-   <div className="adventure-hero-copy"><span className="adventure-kicker">🦊 עולם האוצר שלך</span><h1>היי {child.name}!</h1><p>{copy.greeting}</p><span className="adventure-level">{copy.level} · דרגה {completedTasks+1}</span></div>
+   <div className="adventure-hero-copy"><span className="adventure-kicker">🦊 עולם האוצר שלך</span><h1>היי {child.name}!</h1><p>{copy.greeting}</p><span className="adventure-level">{copy.level}</span></div>
    <div className="fox-companion" aria-label="השועל החכם">🦊<span>היי!</span></div>
    <div className="adventure-spark adventure-spark-one">✦</div><div className="adventure-spark adventure-spark-two">✧</div>
   </section>
