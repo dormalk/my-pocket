@@ -81,7 +81,7 @@ function PwaInstallButton(){
  return <div className="pwa-install-wrap"><button type="button" className="pwa-install-button" onClick={install}>⬇ {canInstall?"התקנת האפליקציה":"התקנה / עזרה"}</button>{help&&<div className="pwa-help" role="status"><b>איך מתקינים?</b><span>ב־iPhone: פותחים ב־Safari, לוחצים על שיתוף ואז „הוספה למסך הבית”.</span><span>ב־Android או במחשב: פותחים את תפריט הדפדפן ובוחרים „התקנת האפליקציה” או „הוספה למסך הבית”.</span></div>}</div>;
 }
 
-function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:Pick<Child,"name"|"birthYear"|"avatar"|"purses">&{ageBand?:"young"|"middle"|"older"};tasks:PurseTask[];savingsGoal:{title:string;targetAgorot:number;achievedAt:string|null}|null;onRefresh?:()=>void;updatedAt?:Date}){
+function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:{name:string;birthYear?:number|null;avatar:string;purses:Purse[];ageBand?:"young"|"middle"|"older"};tasks:PurseTask[];savingsGoal:{title:string;targetAgorot:number;achievedAt:string|null}|null;onRefresh?:()=>void;updatedAt?:Date}){
  const total=child.purses.reduce((sum,p)=>sum+p.balanceAgorot,0);
  const savings=child.purses.find(p=>p.type==="SAVINGS")?.balanceAgorot??0;
  const age=child.birthYear?new Date().getFullYear()-child.birthYear:null;
