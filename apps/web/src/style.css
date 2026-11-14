@@ -866,3 +866,19 @@
   .journey-goal-icon{flex-basis:42px;width:42px;height:42px;font-size:25px}
 }
 @media(prefers-reduced-motion:reduce){.goal-icon-options button{transition:none}}
+
+/* Child savings purse: make the reason for saving part of the treasure card. */
+.child-world .purse-savings-destination{margin-top:14px;padding:12px;border:1px solid rgba(255,255,255,.42);border-radius:16px;background:rgba(255,255,255,.16);color:#fff;text-align:right;}
+.child-world .purse-savings-goal{display:flex;align-items:center;gap:9px;min-width:0;}
+.child-world .purse-savings-goal>span{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);font-size:24px;}
+.child-world .purse-savings-goal>div{display:grid;gap:2px;min-width:0;}
+.child-world .purse-savings-goal small,.child-world .purse-savings-remaining{color:rgba(255,255,255,.88);font-size:12px;}
+.child-world .purse-savings-goal b{color:#fff;font-size:15px;overflow-wrap:anywhere;}
+.child-world .purse-savings-track{height:11px;margin-top:12px;overflow:hidden;border-radius:99px;background:rgba(20,35,25,.28);}
+.child-world .purse-savings-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#fff0a6,#fff);transition:width .5s ease;}
+.child-world .purse-savings-caption{display:flex;justify-content:space-between;gap:8px;margin-top:7px;color:#fff;font-size:12px;}
+.child-world .purse-savings-caption b{font-size:13px;}
+.child-world .purse-savings-remaining{display:block;margin:6px 0 0;line-height:1.5;}
+.child-world .purse-savings-no-goal{display:flex;align-items:center;gap:9px;color:#fff;font-size:13px;line-height:1.5;}
+.child-world .purse-savings-no-goal span:first-child{font-size:25px;flex:0 0 auto;}
+@media(prefers-reduced-motion:reduce){.child-world .purse-savings-track span{transition:none;}}
