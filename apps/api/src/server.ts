@@ -417,6 +417,25 @@ app.post("/children/:childId/income",async(request,reply)=>{
  }
 });
 
+
+app.get("/family/activity",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const now=new Date();
+ const start=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-5,1));
+ const entries=await prisma.ledgerEntry.findMany({where:{familyId:user.familyId,createdAt:{gte:start}},select:{amountAgorot:true,createdAt:true}});
+ const monthly=Array.from({length:6},(_,i)=>{
+  const d=new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth()+i,1));
+  return {month:d.toISOString().slice(0,7),incomeAgorot:0,outflowAgorot:0,netAgorot:0};
+ });
+ const byMonth=new Map(monthly.map(x=>[x.month,x]));
+ for(const entry of entries){
+  const row=byMonth.get(entry.createdAt.toISOString().slice(0,7));
+  if(row){if(entry.amountAgorot>=0)row.incomeAgorot+=entry.amountAgorot;else row.outflowAgorot+=Math.abs(entry.amountAgorot);row.netAgorot+=entry.amountAgorot;}
+ }
+ const recent=await prisma.ledgerEntry.findMany({where:{familyId:user.familyId},orderBy:{createdAt:"desc"},take:30,select:{id:true,kind:true,amountAgorot:true,note:true,createdAt:true,purse:{select:{type:true,child:{select:{name:true}}}}}});
+ return {monthly,recent:recent.map(e=>({id:e.id,kind:e.kind,amountAgorot:e.amountAgorot,note:e.note,createdAt:e.createdAt.toISOString(),purseType:e.purse.type,childName:e.purse.child.name}))};
+});
+
 app.setErrorHandler((error,_request,reply)=>{
   app.log.error(error);
   const candidate=error as {statusCode?:unknown};
