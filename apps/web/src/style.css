@@ -651,39 +651,17 @@
 }
 
 
-/* Parent purse dashboard: clear hierarchy, balances and compact responsive cards */
-.parent-layout .purse-dashboard{display:grid;gap:16px;width:100%;min-width:0;margin-top:18px}
-.parent-layout .purse-dashboard-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;border:1px solid #e5eadf;border-radius:19px;background:linear-gradient(115deg,#f4f8f0,#fffaf0)}
-.parent-layout .purse-dashboard-heading h3{margin:4px 0 3px;color:#29465a;font-size:19px}
-.parent-layout .purse-dashboard-heading p{margin:0;color:#718196;font-size:12px;line-height:1.6}
-.parent-layout .purse-dashboard-heading .eyebrow{color:#a77939;font-weight:800;font-size:11px}
-.parent-layout .purse-total{flex:0 0 auto;display:grid;gap:3px;min-width:145px;padding:11px 15px;border:1px solid #e7dfc9;border-radius:14px;background:#ffffffc9;text-align:center}
-.parent-layout .purse-total small{color:#7c8795;font-size:11px}
-.parent-layout .purse-total strong{color:#29465a;font-size:22px;font-variant-numeric:tabular-nums}
-.parent-layout .purses{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:0}
-.parent-layout .purse{position:relative;display:flex;flex-direction:column;min-height:190px;padding:17px 18px 14px;border-radius:19px;overflow:hidden;transition:transform .18s ease,box-shadow .18s ease}
-.parent-layout .purse:hover{transform:translateY(-2px);box-shadow:0 12px 24px #314b4514}
-.parent-layout .purse:after{content:"";position:absolute;width:105px;height:105px;left:-38px;bottom:-54px;border-radius:50%;background:#ffffff55;pointer-events:none}
-.parent-layout .purse-head{position:relative;z-index:1;align-items:center}
-.parent-layout .purse-head span{display:grid;place-items:center;width:43px;height:43px;border-radius:14px;background:#ffffffb5;font-size:25px}
-.parent-layout .purse-head small{color:#718196;font-size:10px;font-weight:700;letter-spacing:0}
-.parent-layout .purse h3{margin:13px 0 2px;color:#30475a;font-size:15px}
-.parent-layout .purse strong{color:#233d50;font-size:clamp(22px,2.5vw,28px);font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.35;overflow-wrap:anywhere}
-.parent-layout .purse p{margin:3px 0 12px;color:#6f7f8e;font-size:11px}
-.parent-layout .purse-card-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:10px;border-top:1px solid #ffffffa8;color:#6d7b88;font-size:10px}
-.parent-layout .purse-card-footer b{color:#455c6c;font-size:10px;white-space:nowrap}
-@media(max-width:680px){
- .parent-layout .purse-dashboard{gap:11px;margin-top:14px}
- .parent-layout .purse-dashboard-heading{align-items:stretch;flex-direction:column;padding:14px;border-radius:16px;gap:10px}
- .parent-layout .purse-dashboard-heading h3{font-size:17px}
- .parent-layout .purse-total{grid-template-columns:1fr auto;align-items:center;text-align:right;min-width:0;padding:9px 12px}
- .parent-layout .purse-total strong{font-size:20px}
- .parent-layout .purses{grid-template-columns:1fr;gap:9px}
- .parent-layout .purse{min-height:0;padding:13px 14px;border-radius:16px}
- .parent-layout .purse-head span{width:38px;height:38px;border-radius:12px}
- .parent-layout .purse h3{margin-top:8px}
- .parent-layout .purse strong{font-size:24px}
- .parent-layout .purse p{margin-bottom:8px}
- .parent-layout .purse:hover{transform:none}
-}
-@media(prefers-reduced-motion:reduce){.parent-layout .purse{transition:none}.parent-layout .purse:hover{transform:none}}
+/* Simple adventure styling for the three purse cards */
+.parent-layout .selected-purses .purses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:12px}
+.parent-layout .selected-purses .purse{position:relative;display:flex;flex-direction:column;min-height:168px;padding:17px;border:1px solid transparent;border-radius:20px;overflow:hidden;box-shadow:0 5px 14px #344b3510;transition:transform .18s ease,box-shadow .18s ease}
+.parent-layout .selected-purses .purse:hover{transform:translateY(-2px);box-shadow:0 10px 20px #344b3518}
+.parent-layout .selected-purses .purse.expenses{background:linear-gradient(145deg,#e5f1e8,#f4f8e9);border-color:#cbdcc8}
+.parent-layout .selected-purses .purse.savings{background:linear-gradient(145deg,#fff0c9,#fff8e6);border-color:#efdb9f}
+.parent-layout .selected-purses .purse.donation{background:linear-gradient(145deg,#fce6d8,#fff1e6);border-color:#f0d0b9}
+.parent-layout .selected-purses .purse-head{justify-content:flex-start}
+.parent-layout .selected-purses .purse-head span{display:grid;place-items:center;width:44px;height:44px;border-radius:15px;background:#ffffffb8;font-size:27px;box-shadow:0 2px 7px #344b3510}
+.parent-layout .selected-purses .purse h3{margin:13px 0 3px;color:#385342;font-size:16px}
+.parent-layout .selected-purses .purse strong{color:#294638;font-size:27px;line-height:1.35;font-variant-numeric:tabular-nums}
+.parent-layout .selected-purses .purse p{margin:4px 0 0;color:#687c6c;font-size:12px}
+@media(max-width:680px){.parent-layout .selected-purses .purses{grid-template-columns:1fr;gap:10px}.parent-layout .selected-purses .purse{min-height:0;padding:14px}.parent-layout .selected-purses .purse:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.parent-layout .selected-purses .purse{transition:none}.parent-layout .selected-purses .purse:hover{transform:none}}
