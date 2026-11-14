@@ -563,3 +563,21 @@
   .shell:not(.auth-shell) .view-switcher{grid-row:2}
   .shell:not(.auth-shell) .parent-page-nav{grid-row:3}
 }
+
+
+/* Keep install and sign-out controls together on one header line */
+.shell:not(.auth-shell) .header-quick-actions{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  white-space:nowrap;
+}
+.shell:not(.auth-shell) .header-quick-actions .pwa-install-wrap,
+.shell:not(.auth-shell) .header-quick-actions .pwa-installed,
+.shell:not(.auth-shell) .header-quick-actions .logout{
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+@media(max-width:680px){
+  .shell:not(.auth-shell) .header-quick-actions{flex-wrap:nowrap;gap:5px;min-width:max-content}
+}
