@@ -1,4 +1,5 @@
 import {useCallback,useEffect,useMemo,useState} from "react";
+import {ArithmeticWorld} from "./ArithmeticWorld";
 import type {FormEvent} from "react";
 type PurseType="EXPENSES"|"SAVINGS"|"DONATION";
 type Purse={id:string;type:PurseType;balanceAgorot:number};
@@ -139,9 +140,10 @@ function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:{na
   <section className="adventure-section" id="child-purses"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">הכסף שלך מחולק בחוכמה</span><h2>💰 {copy.purses}</h2></div></div><PurseCards child={child}/></section>
   <section className="adventure-section" id="child-tasks"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">כל משימה היא הזדמנות</span><h2>🎯 {copy.tasks}</h2></div>{tasks.length>0&&<span className="task-count">{completedTasks}/{tasks.length} הושלמו</span>}</div><TaskProgress tasks={tasks}/></section>
   <section className="adventure-section" id="child-achievements"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">דברים טובים שכבר עשית</span><h2>🏆 אוסף ההישגים שלי</h2></div></div><div className="achievement-grid">{badges.map(badge=><div className={"achievement-badge "+(badge.earned?"earned":"locked")} key={badge.title}><span>{badge.icon}</span><b>{badge.title}</b><small>{badge.earned?"הישג פתוח!":"עוד בדרך"}</small></div>)}</div></section>
+  <section className="adventure-section" id="child-games"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">משחקים, לומדים ומתקדמים</span><h2>🎮 עולם הלמידה</h2></div><span className="task-count">שלב ראשון · חשבון</span></div><ArithmeticWorld childId={child.id} ageBand={ageBand}/></section>
   <section className="fox-tip"><span className="fox-tip-mascot">🦊</span><div><b>טיפ מהשועל החכם</b><p>{copy.tip}</p></div></section>
   {updatedAt&&<small className="last-updated">עודכן לאחרונה: {updatedAt.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}</small>}
-  <nav className="child-bottom-nav" aria-label="ניווט בעולם האוצר"><a href="#child-journey">🗺️<span>המסע</span></a><a href="#child-purses">💰<span>הקופות</span></a><a href="#child-tasks">🎯<span>משימות</span></a><a href="#child-achievements">🏆<span>הישגים</span></a></nav>
+  <nav className="child-bottom-nav" aria-label="ניווט בעולם האוצר"><a href="#child-journey">🗺️<span>המסע</span></a><a href="#child-games">🎮<span>משחקים</span></a><a href="#child-purses">💰<span>קופות</span></a><a href="#child-tasks">🎯<span>משימות</span></a><a href="#child-achievements">🏆<span>הישגים</span></a></nav>
  </div>;
 }
 function SharedChildPage({token}:{token:string}){
