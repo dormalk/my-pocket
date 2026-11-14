@@ -3,7 +3,9 @@ import {useEffect,useMemo,useState} from "react";
 type AgeBand="young"|"middle"|"older";
 type Operation="add"|"subtract"|"multiply"|"divide";
 type Question={a:number;b:number;answer:number;operation:Operation;choices:number[]};
-type Progress={xp:number;correct:number;streak:number;lastDay:string|null};
+type OperationStats={attempts:number;correct:number};
+type Progress={xp:number;correct:number;streak:number;lastDay:string|null;operationStats:Record<Operation,OperationStats>;coverageBonusClaimed:boolean};
+const emptyOperationStats=():Record<Operation,OperationStats>=>({add:{attempts:0,correct:0},subtract:{attempts:0,correct:0},multiply:{attempts:0,correct:0},divide:{attempts:0,correct:0}});
 
 const operations:{id:Operation;label:string;symbol:string;icon:string}[]=[
  {id:"add",label:"חיבור",symbol:"+",icon:"➕"},
@@ -25,8 +27,8 @@ function makeQuestion(ageBand:AgeBand,operation:Operation):Question{
 }
 function randomInt(min:number,max:number){return Math.floor(Math.random()*(max-min+1))+min;}
 function readProgress(key:string):Progress{
- try{const value=localStorage.getItem(key);if(value){const parsed=JSON.parse(value) as Partial<Progress>;return {xp:Number(parsed.xp)||0,correct:Number(parsed.correct)||0,streak:Number(parsed.streak)||0,lastDay:typeof parsed.lastDay==="string"?parsed.lastDay:null};}}catch{}
- return {xp:0,correct:0,streak:0,lastDay:null};
+ try{const value=localStorage.getItem(key);if(value){const parsed=JSON.parse(value) as Partial<Progress>;const saved=parsed.operationStats as Partial<Record<Operation,Partial<OperationStats>>>|undefined;const operationStats=emptyOperationStats();for(const item of operations){const stat=saved?.[item.id];operationStats[item.id]={attempts:Math.max(0,Number(stat?.attempts)||0),correct:Math.max(0,Number(stat?.correct)||0)};}return {...parsed,xp:Number(parsed.xp)||0,correct:Number(parsed.correct)||0,streak:Number(parsed.streak)||0,lastDay:typeof parsed.lastDay==="string"?parsed.lastDay:null,operationStats,coverageBonusClaimed:parsed.coverageBonusClaimed===true};}}catch{}
+ return {xp:0,correct:0,streak:0,lastDay:null,operationStats:emptyOperationStats(),coverageBonusClaimed:false};
 }
 
 export function ArithmeticWorld({childId,ageBand}:{childId:string;ageBand:AgeBand}){
@@ -48,25 +50,31 @@ export function ArithmeticWorld({childId,ageBand}:{childId:string;ageBand:AgeBan
  function choose(value:number){
   if(answered)return;
   setSelected(value);setAnswered(true);setRoundCount(count=>count+1);
-  if(value===question.answer){
-   setRoundCorrect(count=>count+1);
-   setProgress(old=>{
-    const today=dayKey();
-    const yesterday=new Date(Date.now()-86400000).toLocaleDateString("en-CA");
-    const streak=old.lastDay===today?old.streak:old.lastDay===yesterday?old.streak+1:1;
-    return {...old,xp:old.xp+10,correct:old.correct+1,streak,lastDay:today};
-   });
-  }
+  const isCorrect=value===question.answer;
+  if(isCorrect)setRoundCorrect(count=>count+1);
+  setProgress(old=>{
+   const previous=old.operationStats[question.operation];
+   const operationStats={...old.operationStats,[question.operation]:{attempts:previous.attempts+1,correct:previous.correct+(isCorrect?1:0)}};
+   if(!isCorrect)return {...old,operationStats};
+   const today=dayKey();
+   const yesterday=new Date(Date.now()-86400000).toLocaleDateString("en-CA");
+   const streak=old.lastDay===today?old.streak:old.lastDay===yesterday?old.streak+1:1;
+   const points=previous.correct<5?10:2;
+   const allCovered=operations.every(item=>operationStats[item.id].correct>0);
+   const coverageBonus=!old.coverageBonusClaimed&&allCovered?20:0;
+   return {...old,xp:old.xp+points+coverageBonus,correct:old.correct+1,streak,lastDay:today,operationStats,coverageBonusClaimed:old.coverageBonusClaimed||allCovered};
+  });
  }
  function nextQuestion(){setQuestion(makeQuestion(ageBand,operation));setSelected(null);setAnswered(false);setShowHint(false);}
  function changeOperation(next:Operation){setOperation(next);setQuestion(makeQuestion(ageBand,next));setSelected(null);setAnswered(false);setShowHint(false);setRoundCorrect(0);setRoundCount(0);}
  return <section className="learning-world" aria-label="עולם הלמידה - חשבון">
   <div className="learning-hero"><div><span className="learning-kicker">🦊 השועל החכם מזמין אותך</span><h3>מסע הקסם של המספרים</h3><p>{greeting}</p></div><span className="learning-mascot" aria-hidden="true">🧙🏻‍♂️</span></div>
-  <div className="learning-progress"><div className="learning-level"><span>⭐ שלב {level} · {levelName}</span><b>{progress.xp} נק׳ ניסיון</b></div><div className="learning-track"><span style={{width:(progress.xp%100)+"%"}}/></div><small>עוד {nextLevel} נקודות לשלב הבא</small><div className="learning-stats"><span>🔥 רצף יומי: <b>{progress.streak}</b></span><span>🎯 תשובות נכונות: <b>{progress.correct}</b></span></div></div>
+  <div className="learning-progress"><div className="learning-level"><span>⭐ שלב {level} · {levelName}</span><b>{progress.xp} נק׳ ניסיון</b></div><div className="learning-track"><span style={{width:(progress.xp%100)+"%"}}/></div><small>עוד {nextLevel} נקודות לשלב הבא · מתרגלים את כל ארבעת הסימנים</small><div className="learning-stats"><span>🔥 רצף יומי: <b>{progress.streak}</b></span><span>🎯 תשובות נכונות: <b>{progress.correct}</b></span></div></div>
   <div className="learning-games-heading"><div><b>בחרו אתגר</b><small>אפשר להתאמן בכל נושא כמה שרוצים</small></div><span>📚 חשבון</span></div>
   <div className="learning-operation-grid">{operations.map(item=><button type="button" key={item.id} className={operation===item.id?"learning-operation active":"learning-operation"} aria-pressed={operation===item.id} onClick={()=>changeOperation(item.id)}><span>{item.icon}</span><b>{item.label}</b></button>)}</div>
-  <div className="math-challenge"><div className="math-challenge-top"><span>⚡ אתגר מהיר</span><small>כל תשובה נכונה = 10 נקודות</small></div><p className="math-question">{questionText}</p><div className="math-answers">{question.choices.map(choice=><button type="button" key={choice} disabled={answered} className={answered&&choice===question.answer?"correct":answered&&choice===selected?"incorrect":""} onClick={()=>choose(choice)}>{choice}</button>)}</div>
-   {answered&&<div className={selected===question.answer?"math-feedback success":"math-feedback retry"} role="status">{selected===question.answer?"🎉 כל הכבוד! קיבלת 10 נקודות ניסיון.":"כמעט! התשובה הנכונה היא "+question.answer+". בפעם הבאה נצליח."}<button type="button" className="primary-button" onClick={nextQuestion}>לשאלה הבאה ←</button></div>}
+  <div className="learning-operation-stats" aria-label="התקדמות לפי סימן">{operations.map(item=><div className="learning-operation-stat" key={item.id}><b>{item.symbol} {item.label}</b><span>{progress.operationStats[item.id].correct} נכונות</span><small>{progress.operationStats[item.id].attempts} ניסיונות</small></div>)}</div>
+  <div className="math-challenge"><div className="math-challenge-top"><span>⚡ אתגר מהיר</span><small>10 נק׳ לחמש הראשונות בכל סימן, ואז 2 נק׳</small></div><p className="math-question">{questionText}</p><div className="math-answers">{question.choices.map(choice=><button type="button" key={choice} disabled={answered} className={answered&&choice===question.answer?"correct":answered&&choice===selected?"incorrect":""} onClick={()=>choose(choice)}>{choice}</button>)}</div>
+   {answered&&<div className={selected===question.answer?"math-feedback success":"math-feedback retry"} role="status">{selected===question.answer?"🎉 כל הכבוד! נקודות הניסיון נוספו לחשבון.":"כמעט! התשובה הנכונה היא "+question.answer+". בפעם הבאה נצליח."}<button type="button" className="primary-button" onClick={nextQuestion}>לשאלה הבאה ←</button></div>}
    {!answered&&<button type="button" className="math-hint-button" onClick={()=>setShowHint(value=>!value)}>{showHint?"הסתרת רמז":"💡 רמז קטן"}</button>}
    {showHint&&!answered&&<p className="math-hint">{operation==="add"?"אפשר לספור קדימה מהמספר הגדול.":operation==="subtract"?"התחילו מהמספר הראשון וספרו אחורה.":operation==="multiply"?"כפל הוא חיבור של אותה כמות כמה פעמים.":"חילוק שואל כמה פעמים המספר נכנס במספר השני."}</p>}
   </div>
