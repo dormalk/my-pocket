@@ -934,3 +934,11 @@
 .reading-result .primary-button{width:100%}
 .reading-repeat-note{margin:0;color:#9a7850;font-size:11px;text-align:center}
 @media(max-width:560px){.reading-page,.reading-question-card{padding:13px}.reading-story-card{gap:9px;padding:11px}.reading-story-art{flex-basis:50px;height:50px;font-size:29px}.reading-story-copy b{font-size:13px}.reading-story-text{font-size:15px}.reading-illustration{min-height:140px}}
+
+
+/* Reading story rewards and accessible library pagination */
+.reading-story-score{color:#a87527!important;font-weight:800}
+.reading-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:13px;padding:8px}
+.reading-pagination span{color:#69778b;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.reading-pagination button{min-width:76px;min-height:36px;padding:7px 12px;border:1px solid #ded8eb;border-radius:10px;background:#fff;color:#66558c;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.reading-pagination button:disabled{opacity:.4;cursor:not-allowed}
