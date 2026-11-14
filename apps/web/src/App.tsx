@@ -15,7 +15,7 @@ type FamilyTransaction={id:string;kind:string;amountAgorot:number;note:string|nu
 type FamilyActivity={monthly:FamilyMonth[];recent:FamilyTransaction[]};
 type SharedChild=Pick<Child,"id"|"name"|"avatar"|"purses">&{ageBand:"young"|"middle"|"older";tasks:PurseTask[];savingsGoal:{title:string;targetAgorot:number;achievedAt:string|null}|null};
 type BeforeInstallPromptEvent=Event&{prompt:()=>Promise<void>;userChoice:Promise<{outcome:"accepted"|"dismissed";platform:string}>};
-const meta:Record<PurseType,{label:string;icon:string;description:string;className:string}>={EXPENSES:{label:"הוצאות",icon:"🛍️",description:"לדברים שכיף לקנות",className:"expenses"},SAVINGS:{label:"חיסכון",icon:"🚀",description:"מגשימים חלום גדול",className:"savings"},DONATION:{label:"תרומה",icon:"💛",description:"עושים טוב בעולם",className:"donation"}};
+const meta:Record<PurseType,{label:string;icon:string;description:string;className:string}>={EXPENSES:{label:"הוצאות",icon:"🎒",description:"לדברים שכיף לקנות",className:"expenses"},SAVINGS:{label:"חיסכון",icon:"💎",description:"מגשימים חלום גדול",className:"savings"},DONATION:{label:"תרומה",icon:"🌱",description:"עושים טוב בעולם",className:"donation"}};
 const childAvatars=["🧒","👧","👦","🦊","🐼","🐸","🦁","🐯","🐵","🐰","🐻","🐨","🐱","🐶","🦄","🐲","🚀","⭐"];
 const money=(n:number)=>new Intl.NumberFormat("he-IL",{style:"currency",currency:"ILS"}).format(n/100);
 const transactionKindLabel=(kind:string)=>({INCOME_ALLOCATION:"הפקדת דמי כיס",TASK_REWARD:"תגמול על משימה",EXPENSE:"הוצאה",CASH_REQUEST_PAID:"בקשת כסף",INTEREST_CREDIT:"ריבית",SAVINGS_GOAL_REDEEMED:"משיכה מחיסכון",DONATION_COMPLETED:"תרומה",REVERSAL:"ביטול תנועה"} as Record<string,string>)[kind]??"תנועה בקופה";
