@@ -236,16 +236,11 @@ function ageText(scene:Scene,ageBand:AgeBand){return scene.text[ageBand];}
 
 const nikudCachePrefix="mypocket-nikud-v1-";
 async function vocalizeHebrew(text:string):Promise<string>{
- const response=await fetch("https://nakdan-u1-0.loadbalancer.dicta.org.il/api",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task:"nakdan",data:text,genre:"modern",addmorph:true,keepmetagim:true,keepqq:false,nodageshdefmem:false,patachma:false,useTokenization:true})});
+ const response=await fetch("/api/learning/nikud",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
  if(!response.ok)throw new Error("Nikud service unavailable");
  const payload=await response.json();
- if(!Array.isArray(payload?.data))throw new Error("Unexpected nikud response");
- return payload.data.map((item:any)=>{
-  const options=item?.nakdan?.options;
-  if(!Array.isArray(options)||!options.length)return item?.str??"";
-  const selected=options.find((option:any)=>option?.levelChoice===1)??options[0];
-  return typeof selected?.w==="string"?selected.w.replace(/\|/gu,""):item?.str??"";
- }).join("");
+ if(typeof payload?.text!=="string"||!/[\u05B0-\u05C7]/u.test(payload.text))throw new Error("Nikud was not applied");
+ return payload.text;
 }
 function NikkudText({text}:{text:string}){
  const [displayText,setDisplayText]=useState(text);
