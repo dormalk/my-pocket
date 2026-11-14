@@ -481,3 +481,78 @@
   .shell:not(.auth-shell) .parent-page-nav button,
   .shell:not(.auth-shell) .view-switcher button{min-width:0;padding:9px 5px;font-size:12px}
 }
+
+
+/* Final header polish: explicit RTL placement and a consistent sign-out control */
+.shell:not(.auth-shell)>.topbar{
+  direction:rtl;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:10px 16px;
+}
+.shell:not(.auth-shell)>.topbar>.brand{
+  grid-column:1;grid-row:1;
+  justify-self:start;
+  direction:rtl;
+}
+.shell:not(.auth-shell)>.topbar>.top-actions{display:contents}
+.shell:not(.auth-shell) .header-quick-actions{
+  grid-column:2;grid-row:1;
+  display:flex;align-items:center;justify-content:flex-start;
+  justify-self:start;gap:9px;direction:rtl;
+}
+.shell:not(.auth-shell) .header-quick-actions .logout{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  grid-column:auto;grid-row:auto;
+  justify-self:auto;margin:0;
+  min-height:40px;padding:9px 14px;
+  border:1px solid #f0d8d8;border-radius:12px;
+  background:#fff5f4;color:#a43d45;
+  font-size:13px;font-weight:700;line-height:1;
+  white-space:nowrap;
+  transition:background .15s ease,border-color .15s ease,transform .15s ease;
+}
+.shell:not(.auth-shell) .header-quick-actions .logout::before{
+  content:"↪";font-size:17px;line-height:12px;
+}
+.shell:not(.auth-shell) .header-quick-actions .logout:hover{
+  background:#ffe9e7;border-color:#eabfc0;transform:translateY(-1px);
+}
+.shell:not(.auth-shell) .header-quick-actions .logout:focus-visible{
+  outline:3px solid #eabfc088;outline-offset:2px;
+}
+.shell:not(.auth-shell) .parent-page-nav{
+  grid-column:1;grid-row:2;
+  justify-self:stretch;min-width:0;justify-content:center;flex-wrap:nowrap;
+}
+.shell:not(.auth-shell) .view-switcher{
+  grid-column:2;grid-row:2;
+  justify-self:start;min-width:max-content;
+}
+@media(max-width:680px){
+  .shell:not(.auth-shell)>.topbar{
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-rows:auto auto auto;
+    gap:9px 8px;
+  }
+  .shell:not(.auth-shell)>.topbar>.brand{grid-column:1;grid-row:1}
+  .shell:not(.auth-shell) .header-quick-actions{
+    grid-column:2;grid-row:1;gap:6px;
+    justify-self:start;flex-wrap:wrap;
+  }
+  .shell:not(.auth-shell) .header-quick-actions .logout{
+    min-height:36px;padding:8px 11px;font-size:12px;
+  }
+  .shell:not(.auth-shell) .parent-page-nav{
+    grid-column:1/-1;grid-row:2;display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));width:100%;
+  }
+  .shell:not(.auth-shell) .view-switcher{
+    grid-column:1/-1;grid-row:3;display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));width:100%;
+  }
+  .shell:not(.auth-shell) .parent-page-nav button,
+  .shell:not(.auth-shell) .view-switcher button{min-width:0;padding:9px 5px;font-size:12px}
+}
