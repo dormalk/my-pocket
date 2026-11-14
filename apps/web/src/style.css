@@ -798,3 +798,71 @@
     font-size:11px;
   }
 }
+
+
+/* Savings-goal icon picker */
+.goal-icon-picker{
+  grid-column:1/-1;
+  min-width:0;
+  margin:0;
+  padding:12px;
+  border:1px solid #eadfca;
+  border-radius:13px;
+  background:#fffdf8;
+}
+.goal-icon-picker legend{
+  padding:0 6px;
+  color:#526b5b;
+  font-size:13px;
+  font-weight:700;
+}
+.goal-icon-groups{display:grid;gap:12px}
+.goal-icon-group{display:grid;gap:7px}
+.goal-icon-group>b{font-size:12px;color:#7a897c}
+.goal-icon-options{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(42px,1fr));
+  gap:6px;
+}
+.goal-icon-options button{
+  display:grid;
+  place-items:center;
+  min-width:0;
+  min-height:42px;
+  padding:4px;
+  border:1px solid #e8e8df;
+  border-radius:11px;
+  background:#fff;
+  font-size:24px;
+  line-height:1;
+  transition:background .15s ease,border-color .15s ease,transform .15s ease,box-shadow .15s ease;
+}
+.goal-icon-options button:hover{background:#f3f8ed;transform:translateY(-2px)}
+.goal-icon-options button.selected{
+  background:#e8f3e9;
+  border:2px solid #3d8a61;
+  box-shadow:0 0 0 2px #3d8a611c;
+}
+.goal-icon-options button:focus-visible{outline:3px solid #83b99a;outline-offset:2px}
+.goal-progress-title{display:inline-flex;align-items:center;gap:7px}
+.goal-progress-title>span{font-size:23px;line-height:1}
+.journey-goal-title{display:flex;align-items:center;gap:10px;min-width:0}
+.journey-goal-title>div{display:grid;gap:3px;min-width:0}
+.journey-goal-icon{
+  display:grid;
+  place-items:center;
+  flex:0 0 48px;
+  width:48px;
+  height:48px;
+  border-radius:15px;
+  background:#ffffffa8;
+  box-shadow:0 3px 9px #304d3920;
+  font-size:29px;
+}
+@media(max-width:680px){
+  .goal-icon-picker{padding:10px}
+  .goal-icon-options{grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:5px}
+  .goal-icon-options button{min-height:39px;font-size:22px}
+  .journey-goal-icon{flex-basis:42px;width:42px;height:42px;font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){.goal-icon-options button{transition:none}}
