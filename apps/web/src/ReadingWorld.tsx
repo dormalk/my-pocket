@@ -1,4 +1,4 @@
-import {useMemo,useState} from "react";
+import {useEffect,useMemo,useState} from "react";
 
 type AgeBand="young"|"middle"|"older";
 type Choice={label:string;correct:boolean};
@@ -233,12 +233,46 @@ const progressKey=(id:string)=>"mypocket-learning-v1-"+id;
 const completedKey=(id:string)=>"mypocket-reading-completed-v1-"+id;
 function readCompleted(id:string):string[]{try{const value=JSON.parse(localStorage.getItem(completedKey(id))??"[]");return Array.isArray(value)?value.filter((item):item is string=>typeof item==="string"):[];}catch{return[];}}
 function ageText(scene:Scene,ageBand:AgeBand){return scene.text[ageBand];}
+
+const nikudCachePrefix="mypocket-nikud-v1-";
+async function vocalizeHebrew(text:string):Promise<string>{
+ const response=await fetch("https://nakdan-u1-0.loadbalancer.dicta.org.il/api",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task:"nakdan",data:text,genre:"modern",addmorph:true,keepmetagim:true,keepqq:false,nodageshdefmem:false,patachma:false,useTokenization:true})});
+ if(!response.ok)throw new Error("Nikud service unavailable");
+ const payload=await response.json();
+ if(!Array.isArray(payload?.data))throw new Error("Unexpected nikud response");
+ return payload.data.map((item:any)=>{
+  const options=item?.nakdan?.options;
+  if(!Array.isArray(options)||!options.length)return item?.str??"";
+  const selected=options.find((option:any)=>option?.levelChoice===1)??options[0];
+  return typeof selected?.w==="string"?selected.w.replace(/\|/gu,""):item?.str??"";
+ }).join("");
+}
+function NikkudText({text}:{text:string}){
+ const [displayText,setDisplayText]=useState(text);
+ useEffect(()=>{
+  let active=true;
+  setDisplayText(text);
+  if(!/[\u0590-\u05FF]/u.test(text))return ()=>{active=false;};
+  const key=nikudCachePrefix+text;
+  try{
+   const cached=localStorage.getItem(key);
+   if(cached){setDisplayText(cached);return ()=>{active=false;};}
+  }catch{}
+  vocalizeHebrew(text).then(value=>{
+   if(!active||!value)return;
+   setDisplayText(value);
+   try{localStorage.setItem(key,value);}catch{}
+  }).catch(()=>{});
+  return ()=>{active=false;};
+ },[text]);
+ return <>{displayText}</>;
+}
 function Illustration({scene}:{scene:Scene}){return <div className="reading-illustration" role="img" aria-label={scene.caption}><div className="reading-art-spark spark-a">✦</div><div className="reading-art-spark spark-b">✧</div><span>{scene.art}</span><small>{scene.caption}</small></div>;}
 
 export function ReadingWorld({childId,ageBand}:{childId:string;ageBand:AgeBand}){
  const [storyId,setStoryId]=useState<string|null>(null);
  const [page,setPage]=useState(0);
- const pageSize=6;
+ const pageSize=3;
  const pageCount=Math.ceil(stories.length/pageSize);
  const visibleStories=stories.slice(page*pageSize,(page+1)*pageSize);
  const [sceneIndex,setSceneIndex]=useState(0);
@@ -267,9 +301,9 @@ export function ReadingWorld({childId,ageBand}:{childId:string;ageBand:AgeBand})
  return <section className="learning-world reading-world" aria-label="עולם הקריאה">
   <div className="learning-hero reading-hero"><div><span className="learning-kicker">📖 השועל החכם פותח ספר קסמים</span><h3>מסע בין סיפורים</h3><p>קוראים סיפור, פותרים חידות וצוברים נקודות ניסיון.</p></div><span className="learning-mascot" aria-hidden="true">🦊📚</span></div>
   <div className="learning-progress"><div className="learning-level"><span>⭐ שלב {level}</span><b>{learningProgress.xp} נקודות ניסיון</b></div><div className="learning-track"><span style={{width:(learningProgress.xp%100)+"%"}}/></div><small>כל תשובה נכונה מזכה ב־10 נקודות ניסיון, והשלמת סיפור מעניקה בונוס.</small></div>
-  {!story&&<><div className="learning-games-heading"><div><b>בחרו סיפור לקריאה</b><small>סיפורים קלאסיים בעיבוד ידידותי לילדים</small></div><span>📚 {stories.length} סיפורים</span></div><div className="reading-library">{visibleStories.map(item=><button type="button" className="reading-story-card" key={item.id} onClick={()=>startStory(item.id)}><span className="reading-story-art">{item.icon}</span><span className="reading-story-copy"><b>{item.title}</b><small>{item.subtitle}</small><small>⏱ {item.readingTime} · {item.scenes.length} קטעים · {item.questions.length} שאלות</small><small className="reading-story-score">⭐ עד {item.questions.length*10+10} נקודות</small></span><span className="reading-story-arrow">←</span>{completed.includes(item.id)&&<span className="reading-done">✓ הושלם</span>}</button>)}</div><nav className="reading-pagination" aria-label="עמודי סיפורים"><button type="button" onClick={()=>setPage(value=>Math.max(0,value-1))} disabled={page===0}>הקודם</button><span>עמוד {page+1} מתוך {pageCount}</span><button type="button" onClick={()=>setPage(value=>Math.min(pageCount-1,value+1))} disabled={page>=pageCount-1}>הבא</button></nav></>}
-  {story&&scene&&questionIndex<story.questions.length&&<><div className="reading-topline"><button type="button" className="reading-back" onClick={backToLibrary}>→ לכל הסיפורים</button><span>{story.icon} {story.title}</span></div><div className="reading-progress-line"><span style={{width:((sceneIndex+1)/story.scenes.length*100)+"%"}}/></div><article className="reading-page"><div className="reading-page-heading"><small>קטע {sceneIndex+1} מתוך {story.scenes.length}</small><h4>{scene.title}</h4></div><Illustration scene={scene}/><p className="reading-story-text">{ageText(scene,ageBand)}</p>{sceneIndex+1<story.scenes.length?<button type="button" className="primary-button reading-next" onClick={()=>setSceneIndex(value=>value+1)}>המשך לסיפור ←</button>:<button type="button" className="primary-button reading-next" onClick={()=>{setSceneIndex(story.scenes.length);setQuestionIndex(0);}}>סיימתי לקרוא — לשאלות! ✨</button>}</article>{sceneIndex===story.scenes.length-1&&<div className="reading-quiz-intro">🧠 עכשיו נראה כמה פרטים מהסיפור זכרת!</div>}</>}
-  {story&&question&&sceneIndex===story.scenes.length&&<div className="reading-quiz"><div className="reading-topline"><button type="button" className="reading-back" onClick={backToLibrary}>→ לכל הסיפורים</button><span>שאלה {questionIndex+1} מתוך {story.questions.length}</span></div><div className="reading-question-card"><span className="reading-question-icon">🧩</span><h4>{question.prompt}</h4><div className="reading-choices">{question.choices.map((choice,index)=><button type="button" key={choice.label} disabled={selected!==null} className={selected===index?(choice.correct?"correct":"incorrect"):selected!==null&&choice.correct?"correct":""} onClick={()=>answer(index)}>{choice.label}</button>)}</div>{selected!==null&&<div className="reading-feedback" role="status"><b>{question.choices[selected]?.correct?"🎉 תשובה נכונה!":"💡 נלמד גם מהטעות"}</b><p>{question.explanation}</p><button type="button" className="primary-button" onClick={nextQuestion}>{questionIndex+1===story.questions.length?"סיום וקבלת נקודות":"לשאלה הבאה ←"}</button></div>}</div></div>}
+  {!story&&<><div className="learning-games-heading"><div><b>בחרו סיפור לקריאה</b><small>סיפורים קלאסיים בעיבוד ידידותי לילדים</small></div><span>📚 {stories.length} סיפורים</span></div><div className="reading-library">{visibleStories.map(item=><button type="button" className="reading-story-card" key={item.id} onClick={()=>startStory(item.id)}><span className="reading-story-art">{item.icon}</span><span className="reading-story-copy"><b><NikkudText text={item.title}/></b><small><NikkudText text={item.subtitle}/></small><small>⏱ {item.readingTime} · {item.scenes.length} קטעים · {item.questions.length} שאלות</small><small className="reading-story-score">⭐ עד {item.questions.length*10+10} נקודות</small></span><span className="reading-story-arrow">←</span>{completed.includes(item.id)&&<span className="reading-done">✓ הושלם</span>}</button>)}</div><nav className="reading-pagination" aria-label="עמודי סיפורים"><button type="button" onClick={()=>setPage(value=>Math.max(0,value-1))} disabled={page===0}>הקודם</button><span>עמוד {page+1} מתוך {pageCount}</span><button type="button" onClick={()=>setPage(value=>Math.min(pageCount-1,value+1))} disabled={page>=pageCount-1}>הבא</button></nav></>}
+  {story&&scene&&questionIndex<story.questions.length&&<><div className="reading-topline"><button type="button" className="reading-back" onClick={backToLibrary}>→ לכל הסיפורים</button><span>{story.icon} {story.title}</span></div><div className="reading-progress-line"><span style={{width:((sceneIndex+1)/story.scenes.length*100)+"%"}}/></div><article className="reading-page"><div className="reading-page-heading"><small>קטע {sceneIndex+1} מתוך {story.scenes.length}</small><h4><NikkudText text={scene.title}/></h4></div><Illustration scene={scene}/><p className="reading-story-text"><NikkudText text={ageText(scene,ageBand)}/></p>{sceneIndex+1<story.scenes.length?<button type="button" className="primary-button reading-next" onClick={()=>setSceneIndex(value=>value+1)}>המשך לסיפור ←</button>:<button type="button" className="primary-button reading-next" onClick={()=>{setSceneIndex(story.scenes.length);setQuestionIndex(0);}}>סיימתי לקרוא — לשאלות! ✨</button>}</article>{sceneIndex===story.scenes.length-1&&<div className="reading-quiz-intro">🧠 עכשיו נראה כמה פרטים מהסיפור זכרת!</div>}</>}
+  {story&&question&&sceneIndex===story.scenes.length&&<div className="reading-quiz"><div className="reading-topline"><button type="button" className="reading-back" onClick={backToLibrary}>→ לכל הסיפורים</button><span>שאלה {questionIndex+1} מתוך {story.questions.length}</span></div><div className="reading-question-card"><span className="reading-question-icon">🧩</span><h4><NikkudText text={question.prompt}/></h4><div className="reading-choices">{question.choices.map((choice,index)=><button type="button" key={choice.label} disabled={selected!==null} className={selected===index?(choice.correct?"correct":"incorrect"):selected!==null&&choice.correct?"correct":""} onClick={()=>answer(index)}><NikkudText text={choice.label}/></button>)}</div>{selected!==null&&<div className="reading-feedback" role="status"><b>{question.choices[selected]?.correct?"🎉 תשובה נכונה!":"💡 נלמד גם מהטעות"}</b><p><NikkudText text={question.explanation}/></p><button type="button" className="primary-button" onClick={nextQuestion}>{questionIndex+1===story.questions.length?"סיום וקבלת נקודות":"לשאלה הבאה ←"}</button></div>}</div></div>}
   {story&&questionIndex>=story.questions.length&&<div className="reading-result"><span>🏆</span><h4>{storyAlreadyCompleted?"כל הכבוד, קראת שוב!":"סיפור הושלם!"}</h4><p>{storyAlreadyCompleted?"הסיפור הזה כבר הושלם בעבר, ולכן לא נוספו נקודות נוספות.": "ענית על "+answers.length+" שאלות, מתוכן "+answers.filter(Boolean).length+" נכונות."}</p>{!storyAlreadyCompleted&&<strong>+{earned} נקודות ניסיון ⭐</strong>}<button type="button" className="primary-button" onClick={backToLibrary}>חזרה לספריית הסיפורים</button></div>}
   {story&&storyAlreadyCompleted&&questionIndex===0&&<p className="reading-repeat-note">הסיפור הזה כבר הושלם. אפשר לקרוא שוב ולתרגל, אבל נקודות ניסיון נוספות לא יינתנו עליו.</p>}
  </section>;
