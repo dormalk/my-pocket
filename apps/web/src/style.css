@@ -1011,3 +1011,13 @@
 .preschool-game-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px}.preschool-game-tabs button{padding-inline:4px;font-size:12px}
 @media(max-width:460px){.preschool-game{padding:13px}.preschool-game-heading>span{flex-basis:46px;height:46px;font-size:27px}.preschool-game-heading h3{font-size:18px}.counting-board{min-height:170px;padding:15px 9px}.memory-grid{gap:7px}.memory-card{border-radius:12px}.preschool-number-options button{min-height:64px}.preschool-game-tabs button{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.preschool-game-track span,.memory-card{transition:none}}
+
+
+/* Parent game progress overview */
+.game-progress-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0 22px}
+.game-progress-card{display:grid;gap:7px;padding:15px;border:1px solid #e5e9e5;border-radius:15px;background:#fff}
+.game-progress-card>b{color:#41594b;font-size:14px}
+.game-progress-card>strong{color:#3f8159;font-size:19px}
+.game-progress-card>small{color:#778579;font-size:12px;line-height:1.45}
+.task-manager>h3{margin:18px 0 10px;color:#41594b;font-size:16px}
+@media(max-width:480px){.game-progress-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.game-progress-card{padding:11px}.game-progress-card>strong{font-size:17px}}
