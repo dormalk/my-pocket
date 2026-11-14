@@ -50,7 +50,7 @@ export default function App(){
  const loadChildren=useCallback(async()=>{const result=await api<{children:Child[]}>("/children");setChildren(result.children);setSelectedId(current=>result.children.some(c=>c.id===current)?current:result.children[0]?.id??"");},[]);
   const loadFamilyActivity=useCallback(async()=>{setActivityLoading(true);try{setFamilyActivity(await api<FamilyActivity>("/family/activity"));}finally{setActivityLoading(false);}},[]);
  const loadGameProgress=useCallback(async(childId:string)=>{const result=await api<{sessions:GameSession[]}>(`/children/${childId}/game-progress`);setGameSessions(result.sessions);},[]);
- const recordGameProgress=useCallback(async(childId:string,result:{gameId:string;title:string;score:number;total:number})=>{const endpoint=shareToken?`/public/child/${shareToken}/game-progress`:`/children/${childId}/game-progress`;await api(endpoint,{method:"POST",body:JSON.stringify(result)});},[shareToken]);
+ const recordGameProgress=useCallback(async(childId:string,result:{gameId:string;title:string;score:number;total:number})=>{try{const endpoint=shareToken?`/public/child/${shareToken}/game-progress`:`/children/${childId}/game-progress`;await api(endpoint,{method:"POST",body:JSON.stringify(result)});}catch(err){setError(err instanceof Error?err.message:"לא ניתן לשמור את התקדמות המשחק");}},[shareToken]);
  useEffect(()=>{if(!shareToken)api<{user:User}>("/auth/me").then(r=>setUser(r.user)).catch(()=>{});},[shareToken]);
  useEffect(()=>{if(user&&!shareToken)loadChildren().catch(e=>setError(e.message));},[user,loadChildren,shareToken]);
   useEffect(()=>{if(user&&!shareToken)loadFamilyActivity().catch(e=>setError(e.message));},[user,shareToken,loadFamilyActivity]);
@@ -167,7 +167,7 @@ function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt,onGameCompl
 }
 function SharedChildPage({token}:{token:string}){
  const [child,setChild]=useState<SharedChild|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(true),[updatedAt,setUpdatedAt]=useState(new Date());
- const recordSharedGameProgress=useCallback(async(_childId:string,result:{gameId:string;title:string;score:number;total:number})=>{await api("/public/child/"+token+"/game-progress",{method:"POST",body:JSON.stringify(result)});},[token]);
+ const recordSharedGameProgress=useCallback(async(_childId:string,result:{gameId:string;title:string;score:number;total:number})=>{try{await api("/public/child/"+token+"/game-progress",{method:"POST",body:JSON.stringify(result)});}catch(err){setError(err instanceof Error?err.message:"לא ניתן לשמור את התקדמות המשחק");}},[token]);
  const refresh=useCallback(async()=>{try{const result=await api<{child:SharedChild}>("/public/child/"+token);setChild(result.child);localStorage.setItem("mypocket-child-pwa-path",window.location.pathname);setError("");setUpdatedAt(new Date());}catch{setError("הקישור אינו תקף או שבוטל. בקשו מההורה קישור חדש.");setChild(null);}finally{setLoading(false);}},[token]);
  useEffect(()=>{void refresh();const timer=window.setInterval(()=>void refresh(),30000);return()=>window.clearInterval(timer);},[refresh]);
  if(loading)return <main className="shell auth-shell"><section className="auth-card"><div className="loading-brand"><img src="/pwa-icon.svg?v=4" alt="קופת האוצר" /><h1>פותחים את הקופה...</h1></div></section></main>;
