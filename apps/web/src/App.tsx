@@ -127,7 +127,7 @@ function PwaInstallButton(){
 
 function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:{id:string;name:string;birthYear?:number|null;avatar:string;purses:Purse[];ageBand?:"young"|"middle"|"older"};tasks:PurseTask[];savingsGoal:{title:string;icon:string;targetAgorot:number;achievedAt:string|null}|null;onRefresh?:()=>void;updatedAt?:Date}){
  const [page,setPage]=useState<"journey"|"games"|"purses"|"tasks"|"achievements">("journey");
- const [gameMode,setGameMode]=useState<"math"|"reading"|"counting"|"memory">("math");
+ const [gameMode,setGameMode]=useState<"math"|"reading"|"letters"|"counting"|"memory">("math");
  const total=child.purses.reduce((sum,p)=>sum+p.balanceAgorot,0);
  const savings=child.purses.find(p=>p.type==="SAVINGS")?.balanceAgorot??0;
  const age=child.birthYear?new Date().getFullYear()-child.birthYear:null;
