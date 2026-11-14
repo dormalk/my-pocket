@@ -30,7 +30,7 @@ function readProgress(key:string):Progress{
  return {xp:0,correct:0,streak:0,lastDay:null,operationStats:emptyOperationStats(),coverageBonusClaimed:false};
 }
 
-export function ArithmeticWorld({childId,ageBand}:{childId:string;ageBand:AgeBand}){
+export function ArithmeticWorld({childId,ageBand,onComplete}:{childId:string;ageBand:AgeBand;onComplete?:(result:{gameId:string;title:string;score:number;total:number})=>void}){
  const storageKey="mypocket-learning-v1-"+childId;
  const [progress,setProgress]=useState<Progress>(()=>readProgress(storageKey));
  const [operation,setOperation]=useState<Operation>("add");
@@ -66,7 +66,7 @@ export function ArithmeticWorld({childId,ageBand}:{childId:string;ageBand:AgeBan
   });
  }
  function nextQuestion(){
-  if(roundCount>=5){setScreen("done");return;}
+  if(roundCount>=5){onComplete?.({gameId:"arithmetic",title:currentOperation.label,score:roundCorrect,total:5});setScreen("done");return;}
   setQuestion(makeQuestion(ageBand,operation));setSelected(null);setAnswered(false);setShowHint(false);
  }
  function anotherRound(){setRoundCorrect(0);setRoundCount(0);setQuestion(makeQuestion(ageBand,operation));setSelected(null);setAnswered(false);setShowHint(false);setScreen("play");}
