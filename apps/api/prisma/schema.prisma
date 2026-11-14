@@ -84,6 +84,7 @@ model Child {
   tasks     PurseTask[]
   goals     SavingsGoal[]
   requests  CashRequest[]
+  gameSessions GameSession[]
   @@index([familyId, archivedAt])
 }
 
@@ -219,4 +220,17 @@ model TaskReward {
   createdAt   DateTime  @default(now())
   task        PurseTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
   @@unique([taskId, weekStart])
+}
+
+model GameSession {
+  id          String   @id @default(uuid()) @db.Uuid
+  childId     String   @db.Uuid
+  gameId      String   @db.VarChar(40)
+  title       String   @db.VarChar(80)
+  score       Int
+  total       Int
+  completedAt DateTime @default(now())
+  child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  @@index([childId, completedAt])
+  @@index([childId, gameId, completedAt])
 }
