@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useMemo,useState} from "react";
 import {ArithmeticWorld} from "./ArithmeticWorld";
+import {ReadingWorld} from "./ReadingWorld";
 import type {FormEvent} from "react";
 type PurseType="EXPENSES"|"SAVINGS"|"DONATION";
 type Purse={id:string;type:PurseType;balanceAgorot:number};
@@ -124,6 +125,7 @@ function PwaInstallButton(){
 
 function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:{id:string;name:string;birthYear?:number|null;avatar:string;purses:Purse[];ageBand?:"young"|"middle"|"older"};tasks:PurseTask[];savingsGoal:{title:string;icon:string;targetAgorot:number;achievedAt:string|null}|null;onRefresh?:()=>void;updatedAt?:Date}){
  const [page,setPage]=useState<"journey"|"games"|"purses"|"tasks"|"achievements">("journey");
+ const [gameMode,setGameMode]=useState<"math"|"reading">("math");
  const total=child.purses.reduce((sum,p)=>sum+p.balanceAgorot,0);
  const savings=child.purses.find(p=>p.type==="SAVINGS")?.balanceAgorot??0;
  const age=child.birthYear?new Date().getFullYear()-child.birthYear:null;
@@ -146,7 +148,7 @@ function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:{id
   {page==="purses"&&<section className="adventure-section" id="child-purses"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">הכסף שלך מחולק בחוכמה</span><h2>💰 {copy.purses}</h2></div></div><PurseCards child={child} savingsGoal={savingsGoal}/></section>}
   {page==="tasks"&&<section className="adventure-section" id="child-tasks"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">כל משימה היא הזדמנות</span><h2>🎯 {copy.tasks}</h2></div>{tasks.length>0&&<span className="task-count">{completedTasks}/{tasks.length} הושלמו</span>}</div><TaskProgress tasks={tasks}/></section>}
   {page==="achievements"&&<section className="adventure-section" id="child-achievements"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">דברים טובים שכבר עשית</span><h2>🏆 אוסף ההישגים שלי</h2></div></div><div className="achievement-grid">{badges.map(badge=><div className={"achievement-badge "+(badge.earned?"earned":"locked")} key={badge.title}><span>{badge.icon}</span><b>{badge.title}</b><small>{badge.earned?"הישג פתוח!":"עוד בדרך"}</small></div>)}</div></section>}
-  {page==="games"&&<section className="adventure-section" id="child-games"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">משחקים, לומדים ומתקדמים</span><h2>🎮 עולם הלמידה</h2></div><span className="task-count">שלב ראשון · חשבון</span></div><ArithmeticWorld childId={child.id} ageBand={ageBand}/></section>}
+  {page==="games"&&<section className="adventure-section" id="child-games"><div className="adventure-section-heading"><div><span className="adventure-eyebrow">משחקים, לומדים ומתקדמים</span><h2>🎮 עולם הלמידה</h2></div><span className="task-count">משחקי למידה</span></div><div className="learning-mode-tabs" role="tablist" aria-label="בחירת סוג משחק"><button type="button" role="tab" aria-selected={gameMode==="math"} className={gameMode==="math"?"active":""} onClick={()=>setGameMode("math")}>➕ משחקי חשבון</button><button type="button" role="tab" aria-selected={gameMode==="reading"} className={gameMode==="reading"?"active":""} onClick={()=>setGameMode("reading")}>📚 משחקי קריאה</button></div>{gameMode==="math"?<ArithmeticWorld childId={child.id} ageBand={ageBand}/>:<ReadingWorld childId={child.id} ageBand={ageBand}/>}</section>}
   {page==="journey"&&<section className="fox-tip"><span className="fox-tip-mascot">🦊</span><div><b>טיפ מהשועל החכם</b><p>{copy.tip}</p></div></section>}
   {page==="journey"&&updatedAt&&<small className="last-updated">עודכן לאחרונה: {updatedAt.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}</small>}
   <nav className="child-bottom-nav" aria-label="ניווט בעולם האוצר"><button type="button" className={page==="journey"?"active":""} aria-current={page==="journey"?"page":undefined} onClick={()=>setPage("journey")}>🗺️<span>המסע</span></button><button type="button" className={page==="games"?"active":""} aria-current={page==="games"?"page":undefined} onClick={()=>setPage("games")}>🎮<span>משחקים</span></button><button type="button" className={page==="purses"?"active":""} aria-current={page==="purses"?"page":undefined} onClick={()=>setPage("purses")}>💰<span>קופות</span></button><button type="button" className={page==="tasks"?"active":""} aria-current={page==="tasks"?"page":undefined} onClick={()=>setPage("tasks")}>🎯<span>משימות</span></button><button type="button" className={page==="achievements"?"active":""} aria-current={page==="achievements"?"page":undefined} onClick={()=>setPage("achievements")}>🏆<span>הישגים</span></button></nav>
