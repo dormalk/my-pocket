@@ -164,3 +164,33 @@
  .child-world .purse,.journey-track span{transition:none}
  .child-world .purse:hover{transform:none}
 }
+
+
+/* Gentle motion and achievement celebrations */
+.fox-companion{animation:fox-float 2.8s ease-in-out infinite}
+.adventure-spark{animation:spark-twinkle 2.2s ease-in-out infinite}
+.adventure-spark-two{animation-delay:.7s}
+.adventure-coin{transition:transform .35s ease}
+.adventure-total:hover .adventure-coin{transform:rotate(-12deg) scale(1.08)}
+.achievement-badge.earned>span{animation:badge-pop .55s cubic-bezier(.2,1.5,.5,1) both}
+.achievement-celebration{position:fixed;inset:0;z-index:50;display:grid;place-items:center;overflow:hidden;pointer-events:none;background:#172d3b38;animation:celebration-fade 4.2s ease both}
+.celebration-card{position:relative;z-index:2;display:grid;justify-items:center;gap:8px;width:min(340px,calc(100vw - 36px));padding:25px 22px;border:2px solid #f3d48b;border-radius:25px;background:#fffaf0;box-shadow:0 18px 55px #142d3b40;text-align:center;animation:celebration-pop .55s cubic-bezier(.2,1.5,.5,1) both}
+.celebration-card>span{font-size:54px}
+.celebration-card>b{font-size:20px;color:#72511e}
+.celebration-card>small{font-size:13px;color:#8c744b}
+.celebration-confetti{position:absolute;inset:0;overflow:hidden}
+.celebration-confetti i{position:absolute;top:-12%;left:calc((var(--i, 0) * 5.5%) + 2%);width:9px;height:15px;border-radius:3px;background:#f0c45e;animation:confetti-fall 3.2s ease-in forwards;transform:rotate(20deg)}
+.celebration-confetti i:nth-child(3n){background:#58b88a;width:7px;height:12px;animation-delay:.12s}
+.celebration-confetti i:nth-child(3n + 1){background:#8baee8;animation-delay:.24s}
+.celebration-confetti i:nth-child(4n){background:#f39a53;animation-delay:.36s}
+.celebration-confetti i:nth-child(1){left:4%}.celebration-confetti i:nth-child(2){left:10%}.celebration-confetti i:nth-child(3){left:16%}.celebration-confetti i:nth-child(4){left:22%}.celebration-confetti i:nth-child(5){left:28%}.celebration-confetti i:nth-child(6){left:34%}.celebration-confetti i:nth-child(7){left:40%}.celebration-confetti i:nth-child(8){left:46%}.celebration-confetti i:nth-child(9){left:52%}.celebration-confetti i:nth-child(10){left:58%}.celebration-confetti i:nth-child(11){left:64%}.celebration-confetti i:nth-child(12){left:70%}.celebration-confetti i:nth-child(13){left:76%}.celebration-confetti i:nth-child(14){left:82%}.celebration-confetti i:nth-child(15){left:88%}.celebration-confetti i:nth-child(16){left:94%}.celebration-confetti i:nth-child(17){left:37%}.celebration-confetti i:nth-child(18){left:73%}
+@keyframes fox-float{0%,100%{transform:translateY(0) rotate(3deg)}50%{transform:translateY(-7px) rotate(-2deg)}}
+@keyframes spark-twinkle{0%,100%{opacity:.35;transform:scale(.8) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(18deg)}}
+@keyframes badge-pop{0%{transform:scale(.82)}65%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes celebration-pop{0%{opacity:0;transform:scale(.55) translateY(25px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes celebration-fade{0%,82%{opacity:1}100%{opacity:0}}
+@keyframes confetti-fall{0%{transform:translateY(-5vh) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(115vh) rotate(620deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){
+ .fox-companion,.adventure-spark,.achievement-badge.earned>span,.celebration-card,.celebration-celebration,.celebration-confetti i{animation:none!important}
+ .adventure-total:hover .adventure-coin{transform:none}
+}
