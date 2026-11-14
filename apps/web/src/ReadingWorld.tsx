@@ -264,7 +264,7 @@ function NikkudText({text}:{text:string}){
 }
 function Illustration({scene}:{scene:Scene}){return <div className="reading-illustration" role="img" aria-label={scene.caption}><div className="reading-art-spark spark-a">✦</div><div className="reading-art-spark spark-b">✧</div><span>{scene.art}</span><small>{scene.caption}</small></div>;}
 
-export function ReadingWorld({childId,ageBand}:{childId:string;ageBand:AgeBand}){
+export function ReadingWorld({childId,ageBand,onComplete}:{childId:string;ageBand:AgeBand;onComplete?:(result:{gameId:string;title:string;score:number;total:number})=>void}){
  const [storyId,setStoryId]=useState<string|null>(null);
  const [page,setPage]=useState(0);
  const pageSize=3;
@@ -287,6 +287,7 @@ export function ReadingWorld({childId,ageBand}:{childId:string;ageBand:AgeBand})
  function answer(index:number){if(selected!==null||!question)return;setSelected(index);setAnswers(old=>[...old,question.choices[index]?.correct===true]);}
  function nextQuestion(){if(!story)return;if(questionIndex+1<story.questions.length){setQuestionIndex(value=>value+1);setSelected(null);return;}
   const all=[...answers];const correct=all.filter(Boolean).length;const xp=correct*10+10;
+  onComplete?.({gameId:"reading",title:story.title,score:correct,total:story.questions.length});
   let progress:LearningProgress={xp:0,correct:0,streak:0,lastDay:null};
   try{progress={...progress,...JSON.parse(localStorage.getItem(progressKey(childId))??"{}")};}catch{}
   if(!alreadyCompleted){try{localStorage.setItem(progressKey(childId),JSON.stringify({...progress,xp:progress.xp+xp,correct:progress.correct+correct}));const next=[...completed,story.id];localStorage.setItem(completedKey(childId),JSON.stringify(next));setCompleted(next);}catch{}setEarned(xp);}
