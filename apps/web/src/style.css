@@ -556,3 +556,10 @@
   .shell:not(.auth-shell) .parent-page-nav button,
   .shell:not(.auth-shell) .view-switcher button{min-width:0;padding:9px 5px;font-size:12px}
 }
+
+
+/* Move the parent/child view switcher one row higher on compact screens */
+@media(max-width:680px){
+  .shell:not(.auth-shell) .view-switcher{grid-row:2}
+  .shell:not(.auth-shell) .parent-page-nav{grid-row:3}
+}
