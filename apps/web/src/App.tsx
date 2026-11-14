@@ -79,7 +79,7 @@ export default function App(){
   <article className="overview-bucket donation"><span>💛 תרומה</span><strong>{money(familyOverview.DONATION)}</strong></article>
  </div>
  <div className="overview-children"><div className="overview-children-heading"><b>יתרה לפי ילד/ה</b><small>לחיצה על כרטיס תציג את פרטי הקופות</small></div>
-  {children.length===0?<p className="overview-empty">עדיין לא נוספו ילדים. אפשר להוסיף ילד/ה למטה כדי להתחיל.</p>:<div className="overview-child-list">{children.map(child=><button type="button" key={child.id} className={"overview-child "+(selectedId===child.id?"active":"")} onClick={()=>setSelectedId(child.id)}><span className="overview-child-avatar">{child.avatar||"🧒"}</span><span className="overview-child-name">{child.name}</span><strong>{money(child.purses.reduce((sum,p)=>sum+p.balanceAgorot,0))}</strong><span className="overview-child-arrow">←</span></button>)}</div>}
+  {children.length===0?<p className="overview-empty">עדיין לא נוספו ילדים. אפשר להוסיף ילד/ה למטה כדי להתחיל.</p>:<div className="overview-child-list">{children.map(child=><button type="button" key={child.id} className={"overview-child "+(selectedId===child.id?"active":"")} onClick={()=>{setSelectedId(child.id);setParentPage("children");}}><span className="overview-child-avatar">{child.avatar||"🧒"}</span><span className="overview-child-name">{child.name}</span><strong>{money(child.purses.reduce((sum,p)=>sum+p.balanceAgorot,0))}</strong><span className="overview-child-arrow">←</span></button>)}</div>}
  </div>
 </section>}
 {view==="parent"&&parentPage==="activity"&&<><section className="activity-panel">
