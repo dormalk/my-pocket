@@ -942,3 +942,5 @@
 .reading-pagination span{color:#69778b;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
 .reading-pagination button{min-width:76px;min-height:36px;padding:7px 12px;border:1px solid #ded8eb;border-radius:10px;background:#fff;color:#66558c;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
 .reading-pagination button:disabled{opacity:.4;cursor:not-allowed}
+
+.learning-operation-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:-5px}.learning-operation-stat{display:grid;gap:3px;padding:9px 6px;border:1px solid #e7eaf1;border-radius:11px;background:#fff;text-align:center;min-width:0}.learning-operation-stat b{font-size:10px;color:#59677d}.learning-operation-stat span{font-size:12px;font-weight:800;color:#51458c}.learning-operation-stat small{font-size:9px;color:#8993a4}@media(max-width:420px){.learning-operation-stats{gap:5px}.learning-operation-stat{padding:8px 3px}.learning-operation-stat b{font-size:9px}}
