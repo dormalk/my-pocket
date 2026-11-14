@@ -665,3 +665,100 @@
 .parent-layout .selected-purses .purse p{margin:4px 0 0;color:#687c6c;font-size:12px}
 @media(max-width:680px){.parent-layout .selected-purses .purses{grid-template-columns:1fr;gap:10px}.parent-layout .selected-purses .purse{min-height:0;padding:14px}.parent-layout .selected-purses .purse:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){.parent-layout .selected-purses .purse{transition:none}.parent-layout .selected-purses .purse:hover{transform:none}}
+
+
+/* Vivid treasure-purse palette: bold adventure colors, moving light and lively icons */
+.parent-layout .selected-purses .purse,
+.child-world .purse{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border:1px solid transparent;
+  color:#fff;
+  box-shadow:0 12px 24px #142d3828,inset 0 1px 0 #ffffff55;
+  transition:transform .24s ease,box-shadow .24s ease,filter .24s ease;
+}
+.parent-layout .selected-purses .purse::before,
+.child-world .purse::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:-45% auto -45% -65%;
+  width:42%;
+  transform:rotate(22deg);
+  background:linear-gradient(90deg,transparent,#ffffff38,transparent);
+  animation:purse-treasure-shine 6.5s ease-in-out infinite;
+  pointer-events:none;
+}
+.parent-layout .selected-purses .purse::after,
+.child-world .purse::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  width:145px;height:145px;
+  inset:auto -38px -75px auto;
+  border-radius:50%;
+  background:#ffffff18;
+  box-shadow:0 0 0 18px #ffffff0b,0 0 0 38px #ffffff08;
+  pointer-events:none;
+}
+.parent-layout .selected-purses .purse.expenses,
+.child-world .purse.expenses{
+  background:linear-gradient(135deg,#075b52 0%,#07866d 54%,#21a477 100%);
+  border-color:#4bc49a;
+}
+.parent-layout .selected-purses .purse.savings,
+.child-world .purse.savings{
+  background:linear-gradient(135deg,#8a4b08 0%,#c47a12 52%,#e7a92d 100%);
+  border-color:#f4ca65;
+}
+.parent-layout .selected-purses .purse.donation,
+.child-world .purse.donation{
+  background:linear-gradient(135deg,#8e3540 0%,#c94e4c 52%,#e7794c 100%);
+  border-color:#f39a70;
+}
+.parent-layout .selected-purses .purse h3,
+.parent-layout .selected-purses .purse strong,
+.parent-layout .selected-purses .purse p,
+.child-world .purse h3,
+.child-world .purse strong,
+.child-world .purse p{color:#fff;text-shadow:0 1px 2px #142d3833}
+.parent-layout .selected-purses .purse p,
+.child-world .purse p{color:#fffde9d9}
+.parent-layout .selected-purses .purse-head span,
+.child-world .purse-head span{
+  display:grid;place-items:center;
+  width:50px;height:50px;border-radius:17px;
+  color:#fff;background:#ffffff26;
+  border:1px solid #ffffff55;
+  box-shadow:0 6px 14px #102c2c30,inset 0 1px 0 #ffffff55;
+  animation:purse-icon-bob 3.2s ease-in-out infinite;
+}
+.parent-layout .selected-purses .purse.savings .purse-head span,
+.child-world .purse.savings .purse-head span{animation-delay:.45s}
+.parent-layout .selected-purses .purse.donation .purse-head span,
+.child-world .purse.donation .purse-head span{animation-delay:.9s}
+.parent-layout .selected-purses .purse:hover,
+.child-world .purse:hover{
+  transform:translateY(-5px) scale(1.012);
+  box-shadow:0 18px 30px #142d3840,inset 0 1px 0 #ffffff66;
+  filter:saturate(1.12);
+}
+@keyframes purse-treasure-shine{
+  0%,58%{left:-65%;opacity:0}
+  64%{opacity:1}
+  82%,100%{left:135%;opacity:0}
+}
+@keyframes purse-icon-bob{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-5px) rotate(3deg)}
+}
+@media(max-width:680px){
+  .parent-layout .selected-purses .purse:hover,.child-world .purse:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .parent-layout .selected-purses .purse::before,.child-world .purse::before,
+  .parent-layout .selected-purses .purse-head span,.child-world .purse-head span{animation:none!important}
+  .parent-layout .selected-purses .purse,.child-world .purse{transition:none}
+  .parent-layout .selected-purses .purse:hover,.child-world .purse:hover{transform:none}
+}
