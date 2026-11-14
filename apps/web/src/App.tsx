@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useMemo,useState} from "react";
+import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import type {FormEvent} from "react";
 type PurseType="EXPENSES"|"SAVINGS"|"DONATION";
 type Purse={id:string;type:PurseType;balanceAgorot:number};
@@ -90,7 +90,23 @@ function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt}:{child:{na
  const completedTasks=tasks.filter(task=>task.frequency==="DAILY"?task.approvedToday:task.approvedCountThisWeek>=task.weeklyRequiredCount).length;
  const badges=[{icon:"🪙",title:"צעד ראשון",earned:total>0},{icon:"🚀",title:"מתקדמים בחיסכון",earned:savings>0},{icon:"⭐",title:"משימה הושלמה",earned:tasks.some(task=>task.approvedToday||task.approvedCountThisWeek>0)},{icon:"💛",title:"לב נדיב",earned:(child.purses.find(p=>p.type==="DONATION")?.balanceAgorot??0)>0},{icon:"🏆",title:"החלום הושג",earned:Boolean(savingsGoal?.achievedAt)}];
  const progress=savingsGoal?Math.min(100,Math.max(0,savings/savingsGoal.targetAgorot*100)):0;
+ const earnedKeys=badges.filter(badge=>badge.earned).map(badge=>badge.title).join("|");
+ const previousEarned=useRef<string|null>(null);
+ const [celebration,setCelebration]=useState("");
+ useEffect(()=>{
+  const previous=previousEarned.current;
+  previousEarned.current=earnedKeys;
+  if(previous===null)return;
+  const before=new Set(previous?previous.split("|"):[]);
+  const unlocked=badges.filter(badge=>badge.earned&&!before.has(badge.title));
+  if(unlocked.length){
+   setCelebration(unlocked.length===1?"פתחת הישג חדש: "+unlocked[0].title+"!":"פתחת "+unlocked.length+" הישגים חדשים!");
+   const timer=window.setTimeout(()=>setCelebration(""),4200);
+   return ()=>window.clearTimeout(timer);
+  }
+ },[earnedKeys]);
  return <div className={"child-world child-age-"+ageBand}>
+  {celebration&&<div className="achievement-celebration" role="status" aria-live="polite"><div className="celebration-card"><span>🎉</span><b>{celebration}</b><small>השועל גאה בך!</small></div><div className="celebration-confetti" aria-hidden="true">{Array.from({length:18},(_,index)=><i key={index}/>)}</div></div>}
   <section className="adventure-hero">
    <div className="adventure-hero-copy"><span className="adventure-kicker">🦊 עולם האוצר שלך</span><h1>היי {child.name}!</h1><p>{copy.greeting}</p><span className="adventure-level">{copy.level}</span></div>
    <div className="fox-companion" aria-label="השועל החכם">🦊<span>היי!</span></div>
