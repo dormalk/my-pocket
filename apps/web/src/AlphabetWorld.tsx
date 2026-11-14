@@ -21,7 +21,7 @@ const wordBank:PictureWord[]=[
  {picture:"🐘",word:"פיל"},{picture:"🍄",word:"פטריה"},{picture:"🌸",word:"פרח"},
  {picture:"🐢",word:"צב"},{picture:"🐦",word:"ציפור"},{picture:"🍽️",word:"צלחת"},
  {picture:"🐒",word:"קוף"},{picture:"🌈",word:"קשת"},{picture:"🚂",word:"קטר"},
- {picture:"🍎",word:"רימון"},{picture:"🚆",word:"רכבת"},{picture:"👨‍⚕️",word:"רופא"},
+ {picture:"🦵",word:"רגל"},{picture:"🚆",word:"רכבת"},{picture:"👨‍⚕️",word:"רופא"},
  {picture:"☀️",word:"שמש"},{picture:"⌚",word:"שעון"},{picture:"🪑",word:"שולחן"},
  {picture:"🍓",word:"תות"},{picture:"🐓",word:"תרנגול"},{picture:"🎁",word:"מתנה"}
 ];
@@ -46,7 +46,7 @@ export function AlphabetWorld({childName}:{childName:string}){
  return <section className="alphabet-world" dir="rtl" aria-label="משחק האות הראשונה">
   <div className="alphabet-topline"><div><span className="alphabet-kicker">🌈 משחק לקטנטנים</span><h2>איזו אות מתחבאת בתמונה?</h2><p>מסתכלים על התמונה ובוחרים את האות הראשונה של המילה.</p></div><span className="alphabet-mascot">🦊</span></div>
   {!finished?<><div className="alphabet-progress-row"><span>תרגיל {index+1} מתוך {round.length}</span><b>{correctCount} הצלחות ⭐</b></div><div className="alphabet-progress"><span style={{width:progress+"%"}}/></div>
-   <div className="alphabet-picture-card"><span className="alphabet-picture" role="img" aria-label={chosen?current.word:"תמונה לזיהוי"}>{current.picture}</span>{chosen?<><strong className="alphabet-reveal-word">{current.word}</strong><span className="alphabet-feedback">{chosen===current.answer?encouragement[(index+correctCount)%encouragement.length]:"כמעט! האות הראשונה היא "+current.answer+" 💫"}</span></>:<><strong>איזו אות שומעים בהתחלה?</strong><span className="alphabet-picture-subtitle">בחרו את האות הראשונה של מה שרואים</span></>}</div>
+   <div className="alphabet-picture-card"><span className="alphabet-picture" role="img" aria-label={chosen?current.word:"תמונה לזיהוי"}>{current.picture}</span>{chosen?<><strong className="alphabet-reveal-word">{current.word}</strong><span className="alphabet-feedback" role="status">{chosen===current.answer?encouragement[(index+correctCount)%encouragement.length]:"כמעט! האות הראשונה היא "+current.answer+" 💫"}</span></>:<><strong>איזו אות שומעים בהתחלה?</strong><span className="alphabet-picture-subtitle">בחרו את האות הראשונה של מה שרואים</span></>}</div>
    <div className="alphabet-choices" aria-label="בחירת אות">{current.choices.map((letter,i)=><button type="button" key={letter} disabled={Boolean(chosen)} className={"alphabet-choice"+(chosen&&letter===current.answer?" correct":"")+(chosen===letter&&letter!==current.answer?" incorrect":"")} onClick={()=>choose(letter)} aria-label={"האות "+letter}>{letter}</button>)}</div>
    {!chosen?<button type="button" className="alphabet-hint" onClick={()=>setShowHint(value=>!value)}>{showHint?"✨ חפשו את הצליל הראשון במילה":"💡 רמז קטן"}</button>:<button type="button" className="alphabet-next" onClick={next}>{index===round.length-1?"לסיום המשחק 🏆":"לתרגיל הבא ←"}</button>}
    {chosen&&chosen!==current.answer&&<p className="alphabet-gentle-note">לא נורא, לומדים מכל ניסיון. בפעם הבאה נצליח! 💚</p>}
