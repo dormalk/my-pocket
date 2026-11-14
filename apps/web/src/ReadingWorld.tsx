@@ -42,7 +42,7 @@ const originalStories:Story[]=[
 type StoryBeat=[string,string,string,string];
 type StoryQuiz=[string,string,string,string,string];
 function makeStory(id:string,title:string,subtitle:string,icon:string,beats:StoryBeat[],quiz:StoryQuiz[]):Story{
- return {id,title,subtitle,icon,readingTime:"3 דקות",scenes:beats.map(([title,text,art,caption])=>({title,text:{young,middle: text,older:text},art,caption})),questions:quiz.map(([prompt,correct,wrong1,wrong2,explanation])=>({prompt,choices:[{label:correct,correct:true},{label:wrong1,correct:false},{label:wrong2,correct:false}],explanation}))};
+ return {id,title,subtitle,icon,readingTime:"3 דקות",scenes:beats.map(([title,text,art,caption])=>({title,text:{young:text,middle:text,older:text},art,caption})),questions:quiz.map(([prompt,correct,wrong1,wrong2,explanation])=>({prompt,choices:[{label:correct,correct:true},{label:wrong1,correct:false},{label:wrong2,correct:false}],explanation}))};
 }
 const extraStories:Story[]=[
  makeStory("three-pigs","שלושת החזירונים","על תכנון, חריצות ובניית בית בטוח","🐷",[
