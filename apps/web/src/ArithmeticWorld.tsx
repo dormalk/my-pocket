@@ -6,12 +6,11 @@ type Question={a:number;b:number;answer:number;operation:Operation;choices:numbe
 type OperationStats={attempts:number;correct:number};
 type Progress={xp:number;correct:number;streak:number;lastDay:string|null;operationStats:Record<Operation,OperationStats>;coverageBonusClaimed:boolean};
 const emptyOperationStats=():Record<Operation,OperationStats>=>({add:{attempts:0,correct:0},subtract:{attempts:0,correct:0},multiply:{attempts:0,correct:0},divide:{attempts:0,correct:0}});
-
-const operations:{id:Operation;label:string;symbol:string;icon:string}[]=[
- {id:"add",label:"חיבור",symbol:"+",icon:"➕"},
- {id:"subtract",label:"חיסור",symbol:"−",icon:"➖"},
- {id:"multiply",label:"כפל",symbol:"×",icon:"✖️"},
- {id:"divide",label:"חילוק",symbol:"÷",icon:"➗"}
+const operations:{id:Operation;label:string;symbol:string;icon:string;hint:string}[]=[
+ {id:"add",label:"חיבור",symbol:"+",icon:"➕",hint:"אפשר לספור קדימה מהמספר הגדול."},
+ {id:"subtract",label:"חיסור",symbol:"−",icon:"➖",hint:"התחילו מהמספר הראשון וספרו אחורה."},
+ {id:"multiply",label:"כפל",symbol:"×",icon:"✖️",hint:"כפל הוא חיבור של אותה כמות כמה פעמים."},
+ {id:"divide",label:"חילוק",symbol:"÷",icon:"➗",hint:"חילוק שואל כמה פעמים המספר נכנס במספר השני."}
 ];
 const dayKey=()=>new Date().toLocaleDateString("en-CA");
 function makeQuestion(ageBand:AgeBand,operation:Operation):Question{
@@ -41,12 +40,13 @@ export function ArithmeticWorld({childId,ageBand}:{childId:string;ageBand:AgeBan
  const [roundCorrect,setRoundCorrect]=useState(0);
  const [roundCount,setRoundCount]=useState(0);
  const [showHint,setShowHint]=useState(false);
+ const [screen,setScreen]=useState<"choose"|"play"|"done">("choose");
  useEffect(()=>{try{localStorage.setItem(storageKey,JSON.stringify(progress));}catch{}},[progress,storageKey]);
- const level=Math.floor(progress.xp/100)+1;
- const levelName=level<3?"חוקר מספרים":level<6?"אלוף החשבון":"מאסטר מספרים";
- const nextLevel=100-(progress.xp%100);
- const greeting=ageBand==="young"?"בואו נשחק עם מספרים קטנים ונגלה כמה אנחנו חכמים!":ageBand==="older"?"אתגרי חשבון קצרים שיעזרו לך לחדד את החשיבה.":"כל תשובה מקרבת אותך לשלב הבא. מוכנים?";
- const questionText=useMemo(()=>question.operation==="add"?"כמה זה "+question.a+" ועוד "+question.b+"?":question.operation==="subtract"?"כמה זה "+question.a+" פחות "+question.b+"?":question.operation==="multiply"?"כמה זה "+question.a+" כפול "+question.b+"?":"כמה זה "+question.a+" לחלק ל־"+question.b+"?",[question]);
+ const currentOperation=operations.find(item=>item.id===operation)!;
+ const questionText=useMemo(()=>question.a+" "+(question.operation==="add"?"+":question.operation==="subtract"?"−":question.operation==="multiply"?"×":"÷")+" "+question.b+" = ?",[question]);
+ function startOperation(next:Operation){
+  setOperation(next);setQuestion(makeQuestion(ageBand,next));setSelected(null);setAnswered(false);setShowHint(false);setRoundCorrect(0);setRoundCount(0);setScreen("play");
+ }
  function choose(value:number){
   if(answered)return;
   setSelected(value);setAnswered(true);setRoundCount(count=>count+1);
@@ -65,19 +65,29 @@ export function ArithmeticWorld({childId,ageBand}:{childId:string;ageBand:AgeBan
    return {...old,xp:old.xp+points+coverageBonus,correct:old.correct+1,streak,lastDay:today,operationStats,coverageBonusClaimed:old.coverageBonusClaimed||allCovered};
   });
  }
- function nextQuestion(){setQuestion(makeQuestion(ageBand,operation));setSelected(null);setAnswered(false);setShowHint(false);}
- function changeOperation(next:Operation){setOperation(next);setQuestion(makeQuestion(ageBand,next));setSelected(null);setAnswered(false);setShowHint(false);setRoundCorrect(0);setRoundCount(0);}
- return <section className="learning-world" aria-label="עולם הלמידה - חשבון">
-  <div className="learning-hero"><div><span className="learning-kicker">🦊 השועל החכם מזמין אותך</span><h3>מסע הקסם של המספרים</h3><p>{greeting}</p></div><span className="learning-mascot" aria-hidden="true">🧙🏻‍♂️</span></div>
-  <div className="learning-progress"><div className="learning-level"><span>⭐ שלב {level} · {levelName}</span><b>{progress.xp} נק׳ ניסיון</b></div><div className="learning-track"><span style={{width:(progress.xp%100)+"%"}}/></div><small>עוד {nextLevel} נקודות לשלב הבא · מתרגלים את כל ארבעת הסימנים</small><div className="learning-stats"><span>🔥 רצף יומי: <b>{progress.streak}</b></span><span>🎯 תשובות נכונות: <b>{progress.correct}</b></span></div></div>
-  <div className="learning-games-heading"><div><b>בחרו אתגר</b><small>אפשר להתאמן בכל נושא כמה שרוצים</small></div><span>📚 חשבון</span></div>
-  <div className="learning-operation-grid">{operations.map(item=><button type="button" key={item.id} className={operation===item.id?"learning-operation active":"learning-operation"} aria-pressed={operation===item.id} onClick={()=>changeOperation(item.id)}><span>{item.icon}</span><b>{item.label}</b></button>)}</div>
-  <div className="learning-operation-stats" aria-label="התקדמות לפי סימן">{operations.map(item=><div className="learning-operation-stat" key={item.id}><b>{item.symbol} {item.label}</b><span>{progress.operationStats[item.id].correct} נכונות</span><small>{progress.operationStats[item.id].attempts} ניסיונות</small></div>)}</div>
-  <div className="math-challenge"><div className="math-challenge-top"><span>⚡ אתגר מהיר</span><small>10 נק׳ לחמש הראשונות בכל סימן, ואז 2 נק׳</small></div><p className="math-question">{questionText}</p><div className="math-answers">{question.choices.map(choice=><button type="button" key={choice} disabled={answered} className={answered&&choice===question.answer?"correct":answered&&choice===selected?"incorrect":""} onClick={()=>choose(choice)}>{choice}</button>)}</div>
-   {answered&&<div className={selected===question.answer?"math-feedback success":"math-feedback retry"} role="status">{selected===question.answer?"🎉 כל הכבוד! נקודות הניסיון נוספו לחשבון.":"כמעט! התשובה הנכונה היא "+question.answer+". בפעם הבאה נצליח."}<button type="button" className="primary-button" onClick={nextQuestion}>לשאלה הבאה ←</button></div>}
-   {!answered&&<button type="button" className="math-hint-button" onClick={()=>setShowHint(value=>!value)}>{showHint?"הסתרת רמז":"💡 רמז קטן"}</button>}
-   {showHint&&!answered&&<p className="math-hint">{operation==="add"?"אפשר לספור קדימה מהמספר הגדול.":operation==="subtract"?"התחילו מהמספר הראשון וספרו אחורה.":operation==="multiply"?"כפל הוא חיבור של אותה כמות כמה פעמים.":"חילוק שואל כמה פעמים המספר נכנס במספר השני."}</p>}
-  </div>
-  <div className="learning-round"><span>הסיבוב הנוכחי</span><b>{roundCorrect} מתוך {roundCount} תשובות נכונות</b><small>הכוכבים נשמרים במכשיר הזה וחוזרים איתך בפעם הבאה.</small></div>
+ function nextQuestion(){
+  if(roundCount>=5){setScreen("done");return;}
+  setQuestion(makeQuestion(ageBand,operation));setSelected(null);setAnswered(false);setShowHint(false);
+ }
+ function anotherRound(){setRoundCorrect(0);setRoundCount(0);setQuestion(makeQuestion(ageBand,operation));setSelected(null);setAnswered(false);setShowHint(false);setScreen("play");}
+ return <section className="learning-world arithmetic-world" aria-label="תרגול חשבון">
+  {screen==="choose"&&<>
+   <header className="arithmetic-welcome"><span aria-hidden="true">🦊</span><div><h3>בואו נשחק בחשבון!</h3><p>בוחרים משחק קטן ויוצאים לדרך</p></div><small>⭐ {progress.xp}</small></header>
+   <div className="arithmetic-pick"><h4>איזה תרגול בא לך?</h4><div className="arithmetic-operation-grid">{operations.map(item=><button type="button" key={item.id} className="arithmetic-operation" onClick={()=>startOperation(item.id)}><span>{item.icon}</span><b>{item.label}</b><i>{item.symbol}</i></button>)}</div></div>
+  </>}
+  {screen==="play"&&<>
+   <div className="arithmetic-play-top"><button type="button" onClick={()=>setScreen("choose")}>← בחירת משחק</button><span>⭐ {progress.xp} נקודות</span></div>
+   <div className="arithmetic-round-track" aria-label={`שאלה ${roundCount+1} מתוך 5`}>{[0,1,2,3,4].map(n=><i key={n} className={n<roundCount?"filled":""}/>)}</div>
+   <div className="arithmetic-question-card">
+    <div className="arithmetic-operation-label">{currentOperation.icon} {currentOperation.label}</div>
+    <p className="arithmetic-question">{questionText}</p>
+    <div className="arithmetic-answer-grid">{question.choices.map(choice=><button type="button" key={choice} disabled={answered} className={answered&&choice===question.answer?"correct":answered&&choice===selected?"incorrect":""} onClick={()=>choose(choice)}>{choice}</button>)}</div>
+    {answered&&<div className={selected===question.answer?"arithmetic-feedback good":"arithmetic-feedback try-again"} role="status"><b>{selected===question.answer?"🎉 כל הכבוד!":"כמעט! ממשיכים ללמוד."}</b>{selected!==question.answer&&<span>התשובה הנכונה היא {question.answer}</span>}<button type="button" className="primary-button" onClick={nextQuestion}>{roundCount>=5?"לסיכום הסיבוב":"לשאלה הבאה ←"}</button></div>}
+    {!answered&&<button type="button" className="arithmetic-hint" onClick={()=>setShowHint(value=>!value)}>{showHint?"הסתרת הרמז":"💡 רמז קטן"}</button>}
+    {showHint&&!answered&&<p className="arithmetic-hint-text">{currentOperation.hint}</p>}
+   </div>
+   <p className="arithmetic-encouragement">שאלה {Math.min(roundCount+1,5)} מתוך 5 · כל הכבוד על המאמץ!</p>
+  </>}
+  {screen==="done"&&<div className="arithmetic-finish"><span>🏆</span><h3>איזה יופי, סיימת סיבוב!</h3><strong>{roundCorrect} מתוך 5 תשובות נכונות</strong><p>כל תרגול הופך אותך למיומן יותר.</p><button type="button" className="primary-button" onClick={anotherRound}>עוד סיבוב</button><button type="button" className="arithmetic-secondary" onClick={()=>setScreen("choose")}>בחירת משחק אחר</button></div>}
  </section>;
 }
