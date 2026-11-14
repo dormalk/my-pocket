@@ -58,6 +58,35 @@ await app.register(rateLimit,{global:true,max:100,timeWindow:"1 minute"});
 
 app.get("/health",async()=>({status:"ok",service:"my-pocket-api",mode:"virtual-money-only"}));
 
+const nikudRequestSchema=z.object({text:z.string().trim().min(1).max(5000).regex(/[\u0590-\u05FF]/u)});
+app.post("/learning/nikud",async(request,reply)=>{
+ const parsed=nikudRequestSchema.safeParse(request.body);
+ if(!parsed.success)return reply.code(400).send({error:"invalid_text"});
+ try{
+  const response=await fetch("https://nakdan-u1-0.loadbalancer.dicta.org.il/api",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({task:"nakdan",data:parsed.data.text,genre:"modern",addmorph:true,keepmetagim:true,keepqq:false,nodageshdefmem:false,patachma:false,useTokenization:true}),
+   signal:AbortSignal.timeout(12000)
+  });
+  if(!response.ok){app.log.warn({status:response.status},"Hebrew nikud provider returned an error");return reply.code(502).send({error:"nikud_service_unavailable"});}
+  const payload=await response.json() as {data?:Array<{str?:string;nakdan?:{options?:Array<{levelChoice?:number;w?:string}>}}>};
+  if(!Array.isArray(payload.data))return reply.code(502).send({error:"invalid_nikud_response"});
+  const vocalized=payload.data.map(item=>{
+   const options=item?.nakdan?.options;
+   if(!Array.isArray(options)||!options.length)return item?.str??"";
+   const selected=options.find(option=>option?.levelChoice===1)??options[0];
+   return typeof selected?.w==="string"?selected.w.replace(/\|/gu,""):item?.str??"";
+  }).join("");
+  if(!/[\u05B0-\u05C7]/u.test(vocalized))return reply.code(502).send({error:"nikud_not_applied"});
+  return {text:vocalized};
+ }catch(error){
+  app.log.warn({err:error},"Hebrew nikud request failed");
+  return reply.code(502).send({error:"nikud_service_unavailable"});
+ }
+});
+
+
 app.post("/auth/register",{config:{rateLimit:{max:5,timeWindow:"15 minutes"}}},async(request,reply)=>{
   const parsed=registerSchema.safeParse(request.body);
   if(!parsed.success) return reply.code(400).send({error:"invalid_registration",details:parsed.error.flatten().fieldErrors});
