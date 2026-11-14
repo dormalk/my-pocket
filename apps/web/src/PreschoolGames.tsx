@@ -37,7 +37,7 @@ export function MemoryWorld({onComplete}:{onComplete?:(result:{gameId:string;tit
  const [moves,setMoves]=useState(0);
  const [locked,setLocked]=useState(false);
  const done=matched.length===cards.length;
- useEffect(()=>{if(done)onComplete?.({gameId:"memory",title:"משחק הזיכרון",score:6,total:6});},[done,onComplete]);
+ useEffect(()=>{if(done)onComplete?.({gameId:"memory",title:"משחק הזיכרון",score:6,total:Math.max(6,moves)});},[done,onComplete]);
  useEffect(()=>{if(opened.length!==2)return;const [a,b]=opened;const isMatch=cards[a].picture===cards[b].picture;const timer=window.setTimeout(()=>{if(isMatch)setMatched(old=>[...old,a,b]);setOpened([]);setLocked(false);},isMatch?450:1000);return()=>window.clearTimeout(timer);},[opened,cards]);
  function flip(index:number){if(locked||opened.includes(index)||matched.includes(index)||done)return;const next=[...opened,index];if(next.length===2){setLocked(true);setMoves(m=>m+1);}setOpened(next);}
  function restart(){setCards(newMemoryRound());setOpened([]);setMatched([]);setMoves(0);setLocked(false);}
