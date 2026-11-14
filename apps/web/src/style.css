@@ -135,9 +135,11 @@
 .fox-tip b{display:block;color:#71501e;font-size:14px}
 .fox-tip p{margin:4px 0 0;color:#806d4c;font-size:12px;line-height:1.5}
 .child-world .last-updated{margin:0}
-.child-bottom-nav{position:sticky;bottom:10px;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px;border:1px solid #e7ebee;border-radius:18px;background:#ffffffed;box-shadow:0 8px 25px #26304716;backdrop-filter:blur(12px)}
-.child-bottom-nav a{display:grid;justify-items:center;gap:3px;padding:5px 2px;border-radius:12px;color:#526579;text-decoration:none;font-size:20px}
-.child-bottom-nav a span{font-size:10px;font-weight:bold}
+.child-bottom-nav{position:sticky;bottom:10px;z-index:5;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:8px;border:1px solid #e7ebee;border-radius:18px;background:#ffffffed;box-shadow:0 8px 25px #26304716;backdrop-filter:blur(12px)}
+.child-bottom-nav button{display:grid;justify-items:center;gap:3px;padding:7px 2px;border:0;border-radius:12px;background:transparent;color:#526579;font:inherit;font-size:20px;cursor:pointer;min-width:0}
+.child-bottom-nav button span{font-size:10px;font-weight:bold;white-space:nowrap}
+.child-bottom-nav button.active{background:#eaf3ff;color:#245b92;box-shadow:inset 0 0 0 1px #c9def4}
+.child-bottom-nav button:focus-visible{outline:3px solid #8bb8e6;outline-offset:2px}
 .child-age-young .adventure-hero{background:linear-gradient(115deg,#f39a53,#e9b95b 55%,#76b99a);color:#392d1e}
 .child-age-young .adventure-hero p,.child-age-young .adventure-kicker{color:#fff}
 .child-age-young .adventure-level{color:#fff7dc}
