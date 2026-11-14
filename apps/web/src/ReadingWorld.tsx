@@ -244,7 +244,7 @@ async function vocalizeHebrew(text:string):Promise<string>{
   const options=item?.nakdan?.options;
   if(!Array.isArray(options)||!options.length)return item?.str??"";
   const selected=options.find((option:any)=>option?.levelChoice===1)??options[0];
-  return typeof selected?.w==="string"?selected.w.replace(/\|/gu,"")\\|(?=\S)/gu,""):item?.str??"";
+  return typeof selected?.w==="string"?selected.w.replace(/\|/gu,""):item?.str??"";
  }).join("");
 }
 function NikkudText({text}:{text:string}){
