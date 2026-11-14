@@ -244,7 +244,7 @@ async function vocalizeHebrew(text:string):Promise<string>{
   const options=item?.nakdan?.options;
   if(!Array.isArray(options)||!options.length)return item?.str??"";
   const selected=options.find((option:any)=>option?.levelChoice===1)??options[0];
-  return typeof selected?.w==="string"?selected.w.replace(/(?<=\\S)\\|(?=\\S)/gu,""):item?.str??"";
+  return typeof selected?.w==="string"?selected.w.replace(/(?<=\S)\\|(?=\S)/gu,""):item?.str??"";
  }).join("");
 }
 function NikkudText({text}:{text:string}){
@@ -252,7 +252,7 @@ function NikkudText({text}:{text:string}){
  useEffect(()=>{
   let active=true;
   setDisplayText(text);
-  if(!/[\\u0590-\\u05FF]/u.test(text))return ()=>{active=false;};
+  if(!/[\u0590-\u05FF]/u.test(text))return ()=>{active=false;};
   const key=nikudCachePrefix+text;
   try{
    const cached=localStorage.getItem(key);
