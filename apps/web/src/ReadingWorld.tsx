@@ -238,7 +238,7 @@ function Illustration({scene}:{scene:Scene}){return <div className="reading-illu
 export function ReadingWorld({childId,ageBand}:{childId:string;ageBand:AgeBand}){
  const [storyId,setStoryId]=useState<string|null>(null);
  const [page,setPage]=useState(0);
- const pageSize=6;
+ const pageSize=3;
  const pageCount=Math.ceil(stories.length/pageSize);
  const visibleStories=stories.slice(page*pageSize,(page+1)*pageSize);
  const [sceneIndex,setSceneIndex]=useState(0);
