@@ -227,3 +227,151 @@
 @media(max-width:560px){.learning-world{padding:12px}.learning-hero{padding:14px}.learning-mascot{flex-basis:52px;width:52px;height:52px;font-size:33px}.learning-hero h3{font-size:17px}.learning-operation-grid{gap:5px}.learning-operation{padding:9px 3px}.math-challenge{padding:12px}.math-answers{gap:6px}.math-answers button{min-height:46px;font-size:18px}}
 @media(prefers-reduced-motion:reduce){.learning-track span{transition:none}}
 .child-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+
+/* Layout repair: consistent page width, separated navigation and content */
+.shell{
+  width:min(100%,1120px);
+  margin-inline:auto;
+  padding:clamp(14px,3vw,30px);
+}
+.topbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:14px 20px;
+  margin-bottom:22px;
+}
+.top-actions{
+  display:flex;
+  flex:1 1 620px;
+  min-width:0;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.top-actions nav{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:4px;
+  max-width:100%;
+}
+.parent-page-nav{
+  flex:1 1 360px;
+  justify-content:flex-end;
+  padding:5px;
+}
+.parent-page-nav button{flex:0 1 auto}
+.top-actions>nav:not(.parent-page-nav){
+  padding:5px;
+}
+.top-actions>nav:not(.parent-page-nav) button{white-space:nowrap}
+.parent-layout{
+  width:100%;
+  min-width:0;
+  display:grid;
+  gap:20px;
+  padding:clamp(16px,2.5vw,26px);
+  margin-top:0;
+  border-radius:22px;
+}
+.parent-layout>*{min-width:0}
+.parent-layout .selected-purses{
+  display:grid;
+  gap:16px;
+  width:100%;
+  margin:0;
+}
+.parent-layout .selected-purses>.purses{margin-top:0}
+.family-overview,.activity-panel{
+  width:100%;
+  min-width:0;
+  margin:0 0 18px;
+}
+.activity-panel+.activity-panel{margin-top:18px}
+.parent-heading{gap:12px;flex-wrap:wrap}
+.overview-breakdown>*{min-width:0}
+.overview-bucket strong{overflow-wrap:anywhere}
+.overview-child{min-width:0}
+.overview-child-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.purses{min-width:0}
+.purse{min-width:0;overflow-wrap:anywhere}
+.allocation-form,.deposit-form,.savings-goal-panel,.task-manager,.share-link-panel{
+  width:100%;
+  min-width:0;
+  margin:0;
+}
+.allocation-fields,.deposit-fields,.goal-form,.withdraw-form,.task-create-form{min-width:0}
+.allocation-fields>* ,.deposit-fields>* ,.goal-form>* ,.withdraw-form>* ,.task-create-form>*{min-width:0}
+.child-fields>*{min-width:0}
+.children-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+.child-card{min-width:0;width:100%}
+.monthly-chart{min-width:0;width:100%;overflow:hidden}
+.monthly-bars{width:100%}
+.transaction-row{min-width:0}
+.transaction-description{overflow:hidden}
+.child-shell{width:min(100%,960px)}
+.child-bottom-nav{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  width:100%;
+  gap:6px;
+  margin-top:4px;
+}
+@media(max-width:900px){
+  .topbar{align-items:flex-start}
+  .top-actions{flex:1 1 100%;justify-content:flex-start}
+  .parent-page-nav{order:0;flex:1 1 100%;justify-content:stretch}
+  .parent-page-nav button{flex:1 1 0}
+}
+@media(max-width:680px){
+  .shell{padding:12px}
+  .topbar{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px}
+  .top-actions{
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:stretch;
+    gap:8px;
+    width:100%;
+  }
+  .top-actions>.pwa-install-wrap,.top-actions>.pwa-installed{grid-column:1/-1}
+  .top-actions>.parent-page-nav{
+    grid-column:1/-1;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    width:100%;
+    padding:5px;
+    gap:6px;
+  }
+  .parent-page-nav button{min-width:0;padding:10px 6px;font-size:12px}
+  .top-actions>nav:not(.parent-page-nav){
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    min-width:0;
+    width:100%;
+    gap:4px;
+  }
+  .top-actions>nav:not(.parent-page-nav) button{padding:9px 5px;font-size:12px}
+  .top-actions>.logout{align-self:stretch;padding-inline:12px}
+  .welcome{gap:10px;margin-bottom:14px}
+  .family-overview,.activity-panel{padding:15px;border-radius:17px}
+  .parent-layout{padding:13px;gap:16px;border-radius:17px}
+  .overview-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .overview-child{grid-template-columns:30px minmax(0,1fr) auto 12px;gap:7px;padding:10px 8px}
+  .overview-child strong{font-size:13px}
+  .overview-child-name{font-size:13px}
+  .children-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .allocation-fields,.deposit-fields,.goal-form,.withdraw-form,.task-create-form{grid-template-columns:1fr}
+  .allocation-fields .primary-button,.deposit-fields .primary-button,.goal-form .primary-button,.withdraw-form .primary-button,.task-create-form .primary-button{width:100%}
+  .task-item{min-width:0}
+  .task-actions{flex-wrap:wrap}
+  .monthly-bars{gap:3px}
+  .monthly-column>small{font-size:8px}
+}
+@media(max-width:380px){
+  .overview-breakdown{grid-template-columns:1fr}
+  .overview-bucket{grid-template-columns:1fr auto;align-items:center}
+  .children-grid{grid-template-columns:1fr}
+  .monthly-column>small{font-size:7px}
+}
