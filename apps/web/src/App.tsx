@@ -132,7 +132,7 @@ function PwaInstallButton(){
 
 function ChildAdventure({child,tasks,savingsGoal,onRefresh,updatedAt,onGameComplete}:{child:{id:string;name:string;birthYear?:number|null;avatar:string;purses:Purse[];ageBand?:"young"|"middle"|"older"};tasks:PurseTask[];savingsGoal:{title:string;icon:string;targetAgorot:number;achievedAt:string|null}|null;onRefresh?:()=>void;updatedAt?:Date;onGameComplete?:(childId:string,result:{gameId:string;title:string;score:number;total:number})=>void}){
  const handleGameComplete=useCallback((result:{gameId:string;title:string;score:number;total:number})=>{onGameComplete?.(child.id,result);},[child.id,onGameComplete]);
- const [page,setPage=useState<"journey"|"games"|"purses"|"tasks"|"achievements">("journey");
+ const [page,setPage]=useState<"journey"|"games"|"purses"|"tasks"|"achievements">("journey");
  const [gameMode,setGameMode]=useState<"math"|"reading"|"letters"|"counting"|"memory">("math");
  const total=child.purses.reduce((sum,p)=>sum+p.balanceAgorot,0);
  const savings=child.purses.find(p=>p.type==="SAVINGS")?.balanceAgorot??0;
