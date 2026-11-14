@@ -30,7 +30,7 @@ type Exercise=PictureWord&{id:number;answer:string;choices:string[]};
 function shuffle<T,>(items:T[]):T[]{const result=[...items];for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
 function newRound():Exercise[]{return shuffle(wordBank).map((item,id)=>{const answer=Array.from(item.word)[0];const wrong=shuffle(letters.filter(letter=>letter!==answer)).slice(0,2);return {...item,id,answer,choices:shuffle([answer,...wrong])};});}
 
-export function AlphabetWorld({childName}:{childName:string}){
+export function AlphabetWorld({childName,onComplete}:{childName:string;onComplete?:(result:{gameId:string;title:string;score:number;total:number})=>void}){
  const [round,setRound]=useState<Exercise[]>(()=>newRound());
  const [index,setIndex]=useState(0);
  const [chosen,setChosen]=useState<string|null>(null);
@@ -41,7 +41,7 @@ export function AlphabetWorld({childName}:{childName:string}){
  const progress=finished?100:Math.round(index/round.length*100);
  const encouragement=useMemo(()=>["איזה יופי! כל הכבוד! 🌟","נכון מאוד! את/ה אלוף/ה! 🎉","מצאת את האות! הידד! 💛","וואו, הצלחה נהדרת! 🥳"],[]);
  function choose(letter:string){if(chosen||!current)return;setChosen(letter);if(letter===current.answer)setCorrectCount(value=>value+1);}
- function next(){setIndex(value=>value+1);setChosen(null);setShowHint(false);}
+ function next(){if(index===round.length-1)onComplete?.({gameId:"letters",title:"משחק האותיות",score:correctCount,total:round.length});setIndex(value=>value+1);setChosen(null);setShowHint(false);}
  function restart(){setRound(newRound());setIndex(0);setChosen(null);setCorrectCount(0);setShowHint(false);}
  return <section className="alphabet-world" dir="rtl" aria-label="משחק האות הראשונה">
   <div className="alphabet-topline"><div><span className="alphabet-kicker">🌈 משחק לקטנטנים</span><h2>איזו אות מתחבאת בתמונה?</h2><p>מסתכלים על התמונה ובוחרים את האות הראשונה של המילה.</p></div><span className="alphabet-mascot">🦊</span></div>
