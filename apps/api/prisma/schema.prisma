@@ -135,6 +135,7 @@ model SavingsGoal {
   id           String    @id @default(uuid()) @db.Uuid
   childId      String    @db.Uuid
   title        String
+  icon         String    @default("🎯")
   targetAgorot Int
   active       Boolean   @default(true)
   achievedAt   DateTime?
