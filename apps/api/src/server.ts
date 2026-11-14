@@ -120,7 +120,7 @@ app.get("/public/child/:token",async(request,reply)=>{
   const params=z.object({token:publicChildTokenSchema}).safeParse(request.params);
   reply.header("Cache-Control","no-store, private").header("Referrer-Policy","no-referrer").header("X-Robots-Tag","noindex, nofollow");
   if(!params.success)return reply.code(404).send({error:"share_link_not_found"});
-  const link=await prisma.childAccessLink.findFirst({where:{tokenHash:tokenHash(params.data.token),revokedAt:null},include:{child:{select:{id:true,name:true,birthYear:true,avatar:true,archivedAt:true,purses:{select:{id:true,type:true}},goals:{where:{active:true,redeemedAt:null},orderBy:{createdAt:"desc"},take:1,select:{title:true,targetAgorot:true,achievedAt:true}},family:{select:{timezone:true}}}}}});
+  const link=await prisma.childAccessLink.findFirst({where:{tokenHash:tokenHash(params.data.token),revokedAt:null},include:{child:{select:{id:true,name:true,birthYear:true,avatar:true,archivedAt:true,purses:{select:{id:true,type:true}},goals:{where:{active:true,redeemedAt:null},orderBy:{createdAt:"desc"},take:1,select:{title:true,icon:true,targetAgorot:true,achievedAt:true}},family:{select:{timezone:true}}}}}});
   if(!link||link.child.archivedAt)return reply.code(404).send({error:"share_link_not_found"});
   const purseIds=link.child.purses.map(p=>p.id);
   const totals=purseIds.length?await prisma.ledgerEntry.groupBy({by:["purseId"],where:{purseId:{in:purseIds}},_sum:{amountAgorot:true}}):[];
@@ -301,7 +301,7 @@ app.post("/children/:childId/tasks/:taskId/approve",async(request,reply)=>{
  }
 });
 
-const savingsGoalSchema=z.object({title:z.string().trim().min(1).max(80),targetAgorot:z.number().int().positive().max(2147483647)});
+const savingsGoalSchema=z.object({title:z.string().trim().min(1).max(80),icon:z.string().trim().min(1).max(8).default("🎯"),targetAgorot:z.number().int().positive().max(2147483647)});
 const savingsWithdrawSchema=z.object({amountAgorot:z.number().int().positive().max(2147483647),idempotencyKey:z.string().min(8).max(100),note:z.string().trim().max(160).optional()});
 
 app.get("/children/:childId/savings-goal",async(request,reply)=>{
@@ -329,8 +329,8 @@ app.put("/children/:childId/savings-goal",async(request,reply)=>{
  const achievedAt=balanceAgorot>=parsed.data.targetAgorot?new Date():null;
  const existing=await prisma.savingsGoal.findFirst({where:{childId:child.id,active:true,redeemedAt:null},orderBy:{createdAt:"desc"}});
  const goal=existing
-  ?await prisma.savingsGoal.update({where:{id:existing.id},data:{title:parsed.data.title,targetAgorot:parsed.data.targetAgorot,achievedAt}})
-  :await prisma.savingsGoal.create({data:{childId:child.id,title:parsed.data.title,targetAgorot:parsed.data.targetAgorot,achievedAt}});
+  ?await prisma.savingsGoal.update({where:{id:existing.id},data:{title:parsed.data.title,icon:parsed.data.icon,targetAgorot:parsed.data.targetAgorot,achievedAt}})
+  :await prisma.savingsGoal.create({data:{childId:child.id,title:parsed.data.title,icon:parsed.data.icon,targetAgorot:parsed.data.targetAgorot,achievedAt}});
  return reply.code(existing?200:201).send({goal,balanceAgorot,withdrawalsUnlocked:Boolean(achievedAt)});
 });
 
