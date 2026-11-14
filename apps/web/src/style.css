@@ -944,3 +944,48 @@
 .reading-pagination button:disabled{opacity:.4;cursor:not-allowed}
 
 .learning-operation-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:-5px}.learning-operation-stat{display:grid;gap:3px;padding:9px 6px;border:1px solid #e7eaf1;border-radius:11px;background:#fff;text-align:center;min-width:0}.learning-operation-stat b{font-size:10px;color:#59677d}.learning-operation-stat span{font-size:12px;font-weight:800;color:#51458c}.learning-operation-stat small{font-size:9px;color:#8993a4}@media(max-width:420px){.learning-operation-stats{gap:5px}.learning-operation-stat{padding:8px 3px}.learning-operation-stat b{font-size:9px}}
+
+
+/* Calm, focused arithmetic practice */
+.arithmetic-world{display:grid;gap:16px;padding:clamp(14px,3vw,24px);background:#fbfcfa;border:1px solid #e9eee8;border-radius:22px;color:#30443a}
+.arithmetic-welcome{display:flex;align-items:center;gap:13px;padding:13px 15px;background:#f1f7ef;border-radius:17px}
+.arithmetic-welcome>span{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#fff;font-size:29px}
+.arithmetic-welcome>div{flex:1;min-width:0}
+.arithmetic-welcome h3{margin:0;font-size:19px}
+.arithmetic-welcome p{margin:4px 0 0;color:#718075;font-size:13px}
+.arithmetic-welcome>small{color:#92712f;font-weight:800;white-space:nowrap}
+.arithmetic-pick h4{margin:4px 0 12px;font-size:16px}
+.arithmetic-operation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.arithmetic-operation{position:relative;display:flex;align-items:center;gap:11px;min-height:76px;padding:13px;border:1px solid #e7ece5;border-radius:16px;background:#fff;color:#35483c;text-align:right;transition:transform .15s ease,border-color .15s ease}
+.arithmetic-operation:active{transform:scale(.98)}
+.arithmetic-operation>span{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#f1f6ed;font-size:23px}
+.arithmetic-operation>b{font-size:16px}
+.arithmetic-operation>i{margin-right:auto;color:#9aab9c;font-size:20px;font-style:normal}
+.arithmetic-play-top{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#7c8b7e;font-size:12px}
+.arithmetic-play-top button,.arithmetic-secondary{padding:7px 10px;border:0;border-radius:9px;background:#f0f4ed;color:#607363;font:inherit;font-size:12px;font-weight:700}
+.arithmetic-round-track{display:flex;gap:7px;justify-content:center}
+.arithmetic-round-track i{width:32px;height:6px;border-radius:10px;background:#e7ece5}
+.arithmetic-round-track i.filled{background:#77ad83}
+.arithmetic-question-card{display:grid;justify-items:center;gap:19px;padding:clamp(18px,5vw,32px) 15px;border:1px solid #edf0e9;border-radius:20px;background:#fff;text-align:center}
+.arithmetic-operation-label{padding:6px 12px;border-radius:30px;background:#f3f7ef;color:#6c816d;font-size:12px;font-weight:800}
+.arithmetic-question{margin:0;color:#263e32;font-size:clamp(38px,9vw,58px);font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.arithmetic-answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(100%,380px)}
+.arithmetic-answer-grid button{min-height:64px;border:1px solid #e4ebe2;border-radius:15px;background:#f8faf7;color:#344b3a;font-size:25px;font-weight:800;font-variant-numeric:tabular-nums}
+.arithmetic-answer-grid button:disabled{opacity:1}
+.arithmetic-answer-grid button.correct{border-color:#80b68c;background:#eaf6eb;color:#36734a}
+.arithmetic-answer-grid button.incorrect{border-color:#e2b0a8;background:#fff0ed;color:#a34d43}
+.arithmetic-feedback{display:grid;justify-items:center;gap:8px;width:min(100%,380px);padding:13px;border-radius:14px;font-size:14px}
+.arithmetic-feedback.good{background:#eff8ef;color:#39764b}
+.arithmetic-feedback.try-again{background:#fff7eb;color:#8a683b}
+.arithmetic-feedback .primary-button{width:100%;margin-top:4px}
+.arithmetic-hint{padding:8px 13px;border:0;border-radius:10px;background:#f6f5ef;color:#7d795e;font:inherit;font-size:12px}
+.arithmetic-hint-text{max-width:360px;margin:0;color:#7b806c;font-size:13px;line-height:1.6}
+.arithmetic-encouragement{margin:0;text-align:center;color:#98a397;font-size:12px}
+.arithmetic-finish{display:grid;justify-items:center;gap:12px;padding:28px 14px;text-align:center}
+.arithmetic-finish>span{font-size:54px}
+.arithmetic-finish h3{margin:0;color:#344b3a;font-size:22px}
+.arithmetic-finish strong{color:#54815b;font-size:19px}
+.arithmetic-finish p{margin:0 0 6px;color:#7e8a7d;font-size:13px}
+.arithmetic-finish .primary-button,.arithmetic-finish .arithmetic-secondary{width:min(100%,320px);min-height:44px}
+@media(max-width:420px){.arithmetic-world{gap:13px;padding:12px}.arithmetic-operation{min-height:68px;padding:10px;gap:8px}.arithmetic-operation>span{width:37px;height:37px}.arithmetic-operation>b{font-size:14px}.arithmetic-question-card{gap:16px}.arithmetic-answer-grid button{min-height:58px}}
+@media(prefers-reduced-motion:reduce){.arithmetic-operation{transition:none}}
