@@ -145,6 +145,15 @@ async function requireParent(request:FastifyRequest,reply:FastifyReply){
 }
 
 const publicChildTokenSchema=z.string().min(20).max(100).regex(/^[A-Za-z0-9_-]+$/);
+app.post("/public/child/:token/game-progress",async(request,reply)=>{
+ const params=z.object({token:publicChildTokenSchema}).safeParse(request.params);const parsed=gameProgressSchema.safeParse(request.body);
+ reply.header("Cache-Control","no-store, private").header("Referrer-Policy","no-referrer");
+ if(!params.success||!parsed.success)return reply.code(400).send({error:"invalid_game_progress"});
+ const link=await prisma.childAccessLink.findFirst({where:{tokenHash:tokenHash(params.data.token),revokedAt:null},select:{childId:true,child:{select:{archivedAt:true}}}});
+ if(!link||link.child.archivedAt)return reply.code(404).send({error:"share_link_not_found"});
+ const session=await prisma.gameSession.create({data:{childId:link.childId,...parsed.data}});
+ return reply.code(201).send({session:{id:session.id,completedAt:session.completedAt.toISOString()}});
+});
 app.get("/public/child/:token",async(request,reply)=>{
   const params=z.object({token:publicChildTokenSchema}).safeParse(request.params);
   reply.header("Cache-Control","no-store, private").header("Referrer-Policy","no-referrer").header("X-Robots-Tag","noindex, nofollow");
@@ -254,6 +263,23 @@ app.put("/children/:childId/allocation",async(request,reply)=>{
  const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null}});if(!child)return reply.code(404).send({error:"child_not_found"});
  const policy=await prisma.childAllocationPolicy.upsert({where:{childId:child.id},create:{childId:child.id,...parsed.data},update:{...parsed.data,effectiveAt:new Date()},select:{expensesBps:true,savingsBps:true,donationBps:true,effectiveAt:true}});
  return {policy};
+});
+
+const gameProgressSchema=z.object({gameId:z.enum(["arithmetic","reading","letters","counting","memory"]),title:z.string().trim().min(1).max(80),score:z.number().int().min(0).max(1000),total:z.number().int().min(1).max(1000)}).refine(value=>value.score<=value.total);
+app.get("/children/:childId/game-progress",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);if(!params.success)return reply.code(400).send({error:"invalid_child"});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},select:{id:true}});if(!child)return reply.code(404).send({error:"child_not_found"});
+ const sessions=await prisma.gameSession.findMany({where:{childId:child.id},orderBy:{completedAt:"desc"},take:100,select:{id:true,gameId:true,title:true,score:true,total:true,completedAt:true}});
+ return {sessions:sessions.map(item=>({...item,completedAt:item.completedAt.toISOString()}))};
+});
+app.post("/children/:childId/game-progress",async(request,reply)=>{
+ const user=await requireParent(request,reply);if(!user)return;
+ const params=z.object({childId:z.string().uuid()}).safeParse(request.params);const parsed=gameProgressSchema.safeParse(request.body);
+ if(!params.success||!parsed.success)return reply.code(400).send({error:"invalid_game_progress"});
+ const child=await prisma.child.findFirst({where:{id:params.data.childId,familyId:user.familyId,archivedAt:null},select:{id:true}});if(!child)return reply.code(404).send({error:"child_not_found"});
+ const session=await prisma.gameSession.create({data:{childId:child.id,...parsed.data}});
+ return reply.code(201).send({session:{id:session.id,completedAt:session.completedAt.toISOString()}});
 });
 
 app.get("/children/:childId/tasks",async(request,reply)=>{
