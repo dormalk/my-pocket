@@ -201,3 +201,29 @@
 @media(max-width:560px){.parent-page-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.parent-page-nav button{padding:9px 4px;font-size:11px}.top-actions{align-items:stretch}}
 
 .finance-child-picker{display:grid;gap:10px;padding:15px 17px;background:#fff;border:1px solid #e6eee7;border-radius:16px}.finance-child-picker>b{font-size:14px;color:#53635a}.finance-child-picker>div{display:flex;gap:8px;flex-wrap:wrap}.finance-child-picker button{padding:9px 13px;border:1px solid #e4e9e5;border-radius:11px;background:#fbfcfb;color:#52635a;font-weight:700}.finance-child-picker button.active{background:#eaf4ed;border-color:#9fc4aa;color:#245d46}.finance-child-picker p{margin:0;color:#8791a3;font-size:13px}
+
+
+/* Learning world: playful arithmetic practice */
+.learning-world{display:grid;gap:13px;padding:16px;border:1px solid #e5eaf4;border-radius:22px;background:linear-gradient(145deg,#f7f5ff,#f1f8ff 55%,#f4fbf5)}
+.learning-hero{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 19px;border-radius:17px;background:linear-gradient(110deg,#51458c,#6b70b6 58%,#559b91);color:#fff;overflow:hidden}
+.learning-kicker{font-size:11px;font-weight:800;color:#f7e9ae}
+.learning-hero h3{margin:7px 0 4px;font-size:20px}.learning-hero p{margin:0;color:#f0efff;font-size:12px;line-height:1.5}
+.learning-mascot{display:grid;place-items:center;flex:0 0 65px;width:65px;height:65px;border-radius:22px;background:#ffffff25;font-size:42px}
+.learning-progress{display:grid;gap:8px;padding:14px 15px;border-radius:15px;background:#fff;border:1px solid #e8eaf1}
+.learning-level{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#51458c}.learning-level b{font-size:12px;color:#62718a}
+.learning-track{height:10px;border-radius:20px;background:#ececf5;overflow:hidden}.learning-track span{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#f0bf58,#8b80d4);transition:width .25s}
+.learning-progress>small{font-size:10px;color:#8791a3}
+.learning-stats{display:flex;gap:16px;flex-wrap:wrap;padding-top:8px;border-top:1px solid #f0f1f5;font-size:11px;color:#788498}.learning-stats b{color:#3f5269}
+.learning-games-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.learning-games-heading>div{display:grid;gap:3px}.learning-games-heading b{font-size:14px;color:#33465c}.learning-games-heading small,.learning-games-heading>span{font-size:11px;color:#8590a3}
+.learning-operation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.learning-operation{display:grid;justify-items:center;gap:5px;min-width:0;padding:10px 5px;border:1px solid #e5e8f0;border-radius:13px;background:#fff;color:#58677c}.learning-operation>span{font-size:21px}.learning-operation b{font-size:11px}.learning-operation.active{border-color:#8c83c9;background:#f0edff;color:#51458c;box-shadow:0 3px 10px #51458c14}
+.math-challenge{display:grid;gap:13px;padding:16px;border:1px solid #e8e3f6;border-radius:17px;background:#fff;box-shadow:0 5px 16px #33305a0a}
+.math-challenge-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.math-challenge-top span{font-size:12px;font-weight:800;color:#6b5ca7}.math-challenge-top small{font-size:10px;color:#8791a3}
+.math-question{margin:3px 0;text-align:center;font-size:clamp(22px,5vw,30px);font-weight:850;color:#2d4056;direction:rtl}
+.math-answers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.math-answers button{min-height:51px;border:1px solid #e5e8f0;border-radius:13px;background:#f8f9fc;color:#34465c;font-size:20px;font-weight:800}.math-answers button:disabled{opacity:1}.math-answers button.correct{background:#e8f7ed;border-color:#79c596;color:#23734a}.math-answers button.incorrect{background:#fff0ed;border-color:#e8a397;color:#a4493e}
+.math-feedback{display:grid;gap:10px;padding:12px;border-radius:12px;font-size:12px;font-weight:700;line-height:1.5}.math-feedback.success{background:#edf8f0;color:#286b50}.math-feedback.retry{background:#fff5ed;color:#94613b}.math-feedback .primary-button{justify-self:start}
+.math-hint-button{justify-self:center;background:transparent;color:#7b6ba9;font-size:12px;font-weight:700;padding:5px 10px}.math-hint{margin:0;padding:10px 12px;border-radius:10px;background:#f6f3ff;color:#6b5ca7;font-size:12px;text-align:center}
+.learning-round{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px 12px;border-radius:12px;background:#ffffffa8;color:#6d7a8d;font-size:11px}.learning-round b{color:#4e5e76}.learning-round small{flex-basis:100%;font-size:10px;color:#929bad}
+@media(max-width:560px){.learning-world{padding:12px}.learning-hero{padding:14px}.learning-mascot{flex-basis:52px;width:52px;height:52px;font-size:33px}.learning-hero h3{font-size:17px}.learning-operation-grid{gap:5px}.learning-operation{padding:9px 3px}.math-challenge{padding:12px}.math-answers{gap:6px}.math-answers button{min-height:46px;font-size:18px}}
+@media(prefers-reduced-motion:reduce){.learning-track span{transition:none}}
+.child-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
