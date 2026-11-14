@@ -762,3 +762,39 @@
   .parent-layout .selected-purses .purse,.child-world .purse{transition:none}
   .parent-layout .selected-purses .purse:hover,.child-world .purse:hover{transform:none}
 }
+
+
+/* Prevent the header sign-out control from overflowing narrow screens */
+@media(max-width:680px){
+  .shell:not(.auth-shell)>.topbar{
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+  .shell:not(.auth-shell)>.topbar>.brand{
+    min-width:0;
+  }
+  .shell:not(.auth-shell) .header-quick-actions{
+    min-width:0;
+    max-width:100%;
+    justify-self:end;
+    gap:4px;
+  }
+  .shell:not(.auth-shell) .header-quick-actions .pwa-install-wrap,
+  .shell:not(.auth-shell) .header-quick-actions .pwa-installed{
+    min-width:0;
+    flex:0 1 auto;
+  }
+  .shell:not(.auth-shell) .header-quick-actions .pwa-install-button,
+  .shell:not(.auth-shell) .header-quick-actions .pwa-installed{
+    max-width:clamp(72px,25vw,112px);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:10px;
+    padding:7px 6px;
+  }
+  .shell:not(.auth-shell) .header-quick-actions .logout{
+    flex:0 0 auto;
+    min-width:0;
+    padding:7px 8px;
+    font-size:11px;
+  }
+}
