@@ -6,7 +6,7 @@ const countRounds=[
 ];
 function shuffle<T,>(items:T[]):T[]{const result=[...items];for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
 
-export function CountingWorld(){
+export function CountingWorld({onComplete}:{onComplete?:(result:{gameId:string;title:string;score:number;total:number})=>void}){
  const [round,setRound]=useState(()=>shuffle(countRounds));
  const [index,setIndex]=useState(0);
  const [answer,setAnswer]=useState<number|null>(null);
@@ -15,7 +15,7 @@ export function CountingWorld(){
  const finished=index>=round.length;
  const choices=useMemo(()=>current?shuffle([index+1,...shuffle(Array.from({length:10},(_,i)=>i+1).filter(n=>n!==index+1)).slice(0,2)]):[],[current,index]);
  function choose(value:number){if(answer!==null)return;setAnswer(value);if(value===index+1)setScore(s=>s+1);}
- function next(){setIndex(i=>i+1);setAnswer(null);}
+ function next(){if(index===9)onComplete?.({gameId:"counting",title:"סופרים עד 10",score, total:10});setIndex(i=>i+1);setAnswer(null);}
  function restart(){setRound(shuffle(countRounds));setIndex(0);setAnswer(null);setScore(0);}
  return <section className="preschool-game counting-world" dir="rtl" aria-label="סופרים עד עשר">
   <div className="preschool-game-heading"><span>🔟</span><div><small>משחק מספרים</small><h3>סופרים עד 10</h3><p>סופרים את התמונות ובוחרים את המספר הנכון.</p></div></div>
@@ -30,13 +30,14 @@ export function CountingWorld(){
 const memoryPictures=["🦊","🐼","🐸","🦁","🐰","🐻"];
 type MemoryCard={id:number;picture:string};
 function newMemoryRound():MemoryCard[]{return shuffle(memoryPictures.flatMap((picture,i)=>[{id:i*2,picture},{id:i*2+1,picture}]));}
-export function MemoryWorld(){
+export function MemoryWorld({onComplete}:{onComplete?:(result:{gameId:string;title:string;score:number;total:number})=>void}){
  const [cards,setCards]=useState<MemoryCard[]>(newMemoryRound);
  const [opened,setOpened]=useState<number[]>([]);
  const [matched,setMatched]=useState<number[]>([]);
  const [moves,setMoves]=useState(0);
  const [locked,setLocked]=useState(false);
  const done=matched.length===cards.length;
+ useEffect(()=>{if(done)onComplete?.({gameId:"memory",title:"משחק הזיכרון",score:6,total:6});},[done,onComplete]);
  useEffect(()=>{if(opened.length!==2)return;const [a,b]=opened;const isMatch=cards[a].picture===cards[b].picture;const timer=window.setTimeout(()=>{if(isMatch)setMatched(old=>[...old,a,b]);setOpened([]);setLocked(false);},isMatch?450:1000);return()=>window.clearTimeout(timer);},[opened,cards]);
  function flip(index:number){if(locked||opened.includes(index)||matched.includes(index)||done)return;const next=[...opened,index];if(next.length===2){setLocked(true);setMoves(m=>m+1);}setOpened(next);}
  function restart(){setCards(newMemoryRound());setOpened([]);setMatched([]);setMoves(0);setLocked(false);}
